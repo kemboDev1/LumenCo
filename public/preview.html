@@ -16,6 +16,7 @@
     (() => {
       const maxFileLength = 180000;
       const maxTotalLength = 2000000;
+      const nativeConsoleLog = console.log.bind(console);
 
       function resolveLocalPath(value) {
         const path = String(value || '').trim().split(/[?#]/, 1)[0].replace(/^\.\/+/, '');
@@ -39,8 +40,7 @@
         return files;
       }
 
-      function renderProject(files) {
-        const source = files['index.html'] || '<!doctype html><html><head></head><body><main><h2>Start building your project.</h2></main></body></html>';
+      function renderDocument(source, files = {}, extraCss = '', extraJs = '', captureConsole = false) {
         const parsed = new DOMParser().parseFromString(source, 'text/html');
         const styles = [];
         const scripts = [];
@@ -68,14 +68,27 @@
           }
           script.remove();
         });
+        if (extraCss) styles.push(extraCss);
+        if (extraJs) scripts.push({ code: extraJs, type: '' });
 
-        document.title = parsed.title || 'LumenCo project preview';
+        document.title = parsed.title || 'LumenCo preview';
         document.documentElement.lang = parsed.documentElement.lang || 'en';
         document.body.replaceChildren(...Array.from(parsed.body.childNodes));
         for (const code of styles) {
           const style = document.createElement('style');
           style.textContent = code;
           document.head.append(style);
+        }
+        if (captureConsole) {
+          console.log = (...args) => {
+            nativeConsoleLog(...args);
+            const text = args.map((value) => {
+              if (typeof value === 'string') return value;
+              try { return JSON.stringify(value) ?? String(value); }
+              catch { return String(value); }
+            }).join(' ').slice(0, 500);
+            window.parent.postMessage({ type: 'compiler-console', text }, '*');
+          };
         }
         for (const entry of scripts) {
           const script = document.createElement('script');
@@ -85,10 +98,27 @@
         }
       }
 
+      function renderProject(files) {
+        const source = files['index.html'] || '<!doctype html><html><head></head><body><main><h2>Start building your project.</h2></main></body></html>';
+        renderDocument(source, files);
+      }
+
+      function renderCompiler(data) {
+        const html = typeof data.html === 'string' ? data.html : '';
+        const css = typeof data.css === 'string' ? data.css : '';
+        const js = typeof data.js === 'string' ? data.js : '';
+        if (html.length > 1000000 || css.length > maxFileLength || js.length > maxFileLength || html.length + css.length + js.length > maxTotalLength) return;
+        renderDocument(html, {}, css, js, true);
+      }
+
       window.addEventListener('message', (event) => {
-        if (event.source !== window.parent || event.data?.type !== 'lumenco:project-preview') return;
-        const files = acceptedFiles(event.data.files);
-        if (files) renderProject(files);
+        if (event.source !== window.parent) return;
+        if (event.data?.type === 'lumenco:project-preview') {
+          const files = acceptedFiles(event.data.files);
+          if (files) renderProject(files);
+        } else if (event.data?.type === 'lumenco:compiler-preview') {
+          renderCompiler(event.data);
+        }
       });
     })();
   </script>

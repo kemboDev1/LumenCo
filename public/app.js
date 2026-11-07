@@ -55,7 +55,6 @@ const app = {
   authenticated: false,
   authMode: 'signin',
   pendingEmail: '',
-  pendingPassword: '',
   authNotice: '',
 
   // Live hover preview in Shop
@@ -63,9 +62,9 @@ const app = {
 
   // Compiler state
   compilerTab: 'html',
-  compilerHtml: `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8">\n  <title>LumenCo Kompilyator</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0c101a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #141b2d; border: 1px solid #1e2a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0c101a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Salom, LumenCo!</h1>\n    <p>Brauzerdagi shaxsiy kod laboratoriyangiz.</p>\n    <button onclick="salom()">Meni bos</button>\n  </div>\n  <script>\n    function salom() {\n      console.log('LumenCo tugmasi bosildi!');\n      alert('Kompilyator muvaffaqiyatli ishlayapti!');\n    }\n  </script>\n</body>\n</html>`,
-  compilerCss: `/* CSS stillaringiz */\nbody { margin: 0; }`,
-  compilerJs: `// JavaScript kodingiz\nconsole.log('LumenCo kompilyatori tayyor.');`,
+  compilerHtml: `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>LumenCo Compiler</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0c101a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #141b2d; border: 1px solid #1e2a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0c101a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Welcome to LumenCo!</h1>\n    <p>Your personal browser coding lab.</p>\n    <button id="hello-button" type="button">Try this button</button><p id="hello-message"></p>\n  </div>\n  <script>\n    function salom() {\n      console.log('LumenCo button clicked.');\n      document.getElementById('hello-message').textContent = 'Your first interaction works.';\n    }\n  </script>\n</body>\n</html>`,
+  compilerCss: `/* Add your CSS */\nbody { margin: 0; }`,
+  compilerJs: `// Add your JavaScript\nconsole.log('LumenCo compiler is ready.');`,
   compilerConsole: ['[Tizim] LumenCo laboratoriya konsoli faol.'],
 
   // Speed typing game state
@@ -524,7 +523,7 @@ function renderCompiler() {
           <div style="padding:8px 16px;background:#0c101a;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted)">
             Jonli natija (Sandbox)
           </div>
-          <iframe id="compiler-preview-frame" style="flex:1;border:0;width:100%" sandbox="allow-scripts" title="Natija"></iframe>
+          <iframe id="compiler-preview-frame" style="flex:1;border:0;width:100%" sandbox="allow-scripts" referrerpolicy="no-referrer" title="Compiler preview" src="/preview.html"></iframe>
         </div>
       </div>
     </div>
@@ -534,19 +533,12 @@ function renderCompiler() {
 function runCompilerCode() {
   const frame = document.getElementById('compiler-preview-frame');
   if (!frame) return;
-  const html = app.compilerHtml;
-  const css = `<style>${app.compilerCss}</style>`;
-  const js = `
-    <script>
-      const _origLog = console.log;
-      console.log = function(...args) {
-        _origLog.apply(console, args);
-        window.parent.postMessage({ type: 'compiler-console', text: args.join(' ') }, '*');
-      };
-      ${app.compilerJs}
-    <\/script>
-  `;
-  frame.srcdoc = `${css}\n${html}\n${js}`;
+  frame.contentWindow?.postMessage({
+    type: 'lumenco:compiler-preview',
+    html: app.compilerHtml,
+    css: app.compilerCss,
+    js: app.compilerJs
+  }, '*');
 }
 
 /* ==========================================================================
@@ -1120,7 +1112,10 @@ function render() {
   renderShell(content);
   mountProjectPreviews();
 
-  if (app.screen === 'compiler') runCompilerCode();
+  if (app.screen === 'compiler') {
+    const frame = document.getElementById('compiler-preview-frame');
+    frame?.addEventListener('load', runCompilerCode, { once: true });
+  }
 
   if (app.screen === 'typing' && !app.typingFinished) {
     const input = document.getElementById('typing-hidden-input');
@@ -1372,6 +1367,23 @@ async function handleClick(e) {
   if (!btn) return;
   const action = btn.dataset.action;
 
+  if (action === 'toggle-auth-mode') {
+    app.authMode = app.authMode === 'signup' ? 'signin' : 'signup';
+    return renderAuth();
+  }
+  if (action === 'auth-confirmed' || action === 'auth-back') {
+    app.authMode = 'signin';
+    renderAuth();
+    if (action === 'auth-confirmed') toast('Now sign in with your email and password.');
+    return;
+  }
+  if (action === 'auth-resend') {
+    try {
+      await LumenBackend.resendConfirmation(app.pendingEmail);
+      toast('A new confirmation email has been sent.');
+    } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
   if (action === 'navigate') return navigate(btn.dataset.screen);
   if (action === 'toggle-fullscreen') return toggleFullscreen();
   if (action === 'close-modal' || (action === 'backdrop-close' && e.target === btn)) return closeModal();
@@ -1489,6 +1501,35 @@ async function handleSubmit(e) {
   const kind = form.dataset.form;
   const values = new FormData(form);
 
+  if (kind === 'auth-form') {
+    const email = String(values.get('email') || '').trim();
+    const password = String(values.get('password') || '');
+    const name = String(values.get('name') || '').trim();
+    try {
+      if (app.authMode === 'signup') {
+        const result = await LumenBackend.signUp(email, password, name);
+        if (result.needsEmail) {
+          app.pendingEmail = email;
+          app.authMode = 'confirm';
+          renderAuth();
+          toast('We sent a confirmation link to your email.');
+          return;
+        }
+      } else {
+        await LumenBackend.signIn(email, password);
+      }
+      app.pendingEmail = email;
+      app.authenticated = true;
+      app.state = await request('/api/state');
+      app.projectId = app.state.projects?.[0]?.id || null;
+      const project = getProject();
+      app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
+      render();
+      toast('Welcome to LumenCo.');
+    } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
+
   if (kind === 'new-project') {
     try {
       app.state = await request('/api/projects', { method: 'POST', body: JSON.stringify({ name: values.get('name'), template: values.get('template') }) });
@@ -1573,12 +1614,32 @@ window.addEventListener('message', (e) => {
   if (!frame || e.source !== frame.contentWindow || e.data?.type !== 'compiler-console' || typeof e.data.text !== 'string') return;
   app.compilerConsole.push(e.data.text.slice(0, 500));
   if (app.compilerConsole.length > 100) app.compilerConsole.splice(0, app.compilerConsole.length - 100);
+  if (app.compilerTab === 'console') {
+    const output = document.getElementById('compiler-input');
+    if (output) output.value = app.compilerConsole.join('\n');
+  }
 });
 
 /* ==========================================================================
    AUTH PAGE
    ========================================================================== */
 function renderAuth() {
+  if (app.authMode === 'confirm') {
+    appRoot.innerHTML = `
+      <main class="auth-page">
+        <section class="auth-card">
+          <div class="auth-brand"><span class="brand-mark">L</span><span class="brand-word">LumenCo<small>Build. Keep growing.</small></span><select class="locale-picker" data-locale-picker aria-label="Language"><option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option><option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option><option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option></select></div>
+          <p class="eyebrow">ONE QUICK STEP</p>
+          <h1>Check your inbox</h1>
+          <p class="auth-intro">We sent a confirmation link to <strong>${escapeHtml(app.pendingEmail || 'your email address')}</strong>. Confirm your account, then sign in with your email and password.</p>
+          <div class="auth-actions"><button class="btn auth-submit" type="button" data-action="auth-confirmed">I have confirmed · Continue to sign in</button><button class="btn btn-secondary" type="button" data-action="auth-resend">Resend confirmation email</button><button class="auth-switch" type="button" data-action="auth-back">Back to sign in</button></div>
+        </section>
+        <aside class="auth-side"><span class="auth-kicker">BUILD YOUR NEXT IDEA</span><h2>Every line moves you forward.</h2><p>Learn, build and keep your work organized in one calm workspace.</p></aside>
+      </main>`;
+    appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
+    document.documentElement.lang = app.locale;
+    return;
+  }
   const isSignup = app.authMode === 'signup';
   appRoot.innerHTML = `
     <main class="auth-page">
@@ -1598,7 +1659,7 @@ function renderAuth() {
         <h1 style="margin:0 0 8px;font-size:26px">${isSignup ? 'Hisob yarating' : 'LumenCo hisobingizga kiring'}</h1>
         <p style="color:var(--muted-light);margin:0 0 24px">${isSignup ? 'Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.' : 'Loyihalaringiz va o‘sishingiz bitta joyda.'}</p>
 
-        <form data-form="auth-form" onsubmit="handleAuthSubmit(event)">
+        <form data-form="auth-form">
           ${isSignup ? `
             <div class="field">
               <label>Ismingiz</label>
@@ -1620,7 +1681,7 @@ function renderAuth() {
 
         <p style="text-align:center;margin-top:24px;color:var(--muted);font-size:13px">
           ${isSignup ? 'Hisobingiz bormi?' : 'Hisobingiz yo‘qmi?'}
-          <button style="color:var(--cyan);font-weight:700" type="button" onclick="toggleAuthMode()">
+          <button style="color:var(--cyan);font-weight:700" type="button" data-action="toggle-auth-mode">
             ${isSignup ? 'Kirish' : 'Ro‘yxatdan o‘tish'}
           </button>
         </p>
@@ -1637,37 +1698,9 @@ function renderAuth() {
       </aside>
     </main>
   `;
+  appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
+  document.documentElement.lang = app.locale;
 }
-
-window.toggleAuthMode = function() {
-  app.authMode = app.authMode === 'signup' ? 'signin' : 'signup';
-  renderAuth();
-};
-
-window.handleAuthSubmit = async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const values = new FormData(form);
-  const email = String(values.get('email') || '').trim();
-  const password = String(values.get('password') || '');
-  const name = String(values.get('name') || '').trim();
-
-  try {
-    if (app.authMode === 'signup') {
-      const res = await LumenBackend.signUp(email, password, name);
-      if (res.needsEmail) {
-        toast('Emailga tasdiqlash xati yuborildi. Pochtani tekshiring.');
-        return;
-      }
-    } else {
-      await LumenBackend.signIn(email, password);
-    }
-    app.authenticated = true;
-    app.state = await request('/api/state');
-    render();
-    toast('Xush kelibsiz!');
-  } catch (err) { toast(err.message, 'error'); }
-};
 
 /* ==========================================================================
    BOOTSTRAP

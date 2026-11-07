@@ -948,6 +948,16 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
 }
+.auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+.auth-brand .locale-picker { margin-left: auto; }
+.auth-intro { color: var(--ink-secondary); line-height: 1.65; margin: 8px 0 24px; }
+.auth-card .field { margin-bottom: 16px; }
+.auth-submit { width: 100%; min-height: 44px; justify-content: center; margin-top: 8px; }
+.auth-switch { background: transparent; border: 0; color: var(--ink-secondary); cursor: pointer; padding: 12px 0 0; }
+.auth-switch button { color: var(--lime); font-weight: 700; margin-left: 4px; }
+.auth-actions { display: grid; gap: 10px; margin-top: 18px; }
+.auth-actions .auth-switch { justify-self: center; }
+.auth-kicker { color: var(--lime); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .auth-side {
   background: radial-gradient(circle at 65% 35%, #263b30 0%, #101815 70%);
   display: flex;

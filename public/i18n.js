@@ -765,7 +765,29 @@
     ['Ilovani konteynerga joylab, yetkazishni avtomatlashtiring', 'Package an app and automate delivery', 'Соберите контейнер и автоматизируйте доставку'],
     ['Ishonchli full-stack xizmat loyihalang', 'Design a resilient full-stack service', 'Спроектируйте надёжный full-stack сервис'],
     ['Shaxsiy rekord', 'Personal best', 'Личный рекорд'],
-    ['Mashq saqlandi. Darslar XP va coin beradi.', 'Practice saved. Lessons award XP and coins.', 'Результат сохранён. За уроки начисляются XP и монеты.']
+    ['Mashq saqlandi. Darslar XP va coin beradi.', 'Practice saved. Lessons award XP and coins.', 'Результат сохранён. За уроки начисляются XP и монеты.'],
+    ['Bitta tezkor qadam', 'ONE QUICK STEP', 'ОДИН БЫСТРЫЙ ШАГ'],
+    ['Pochtangizni tekshiring', 'Check your inbox', 'Проверьте почту'],
+    ['Tasdiqlash havolasini shu manzilga yubordik: ', 'We sent a confirmation link to ', 'Мы отправили ссылку для подтверждения на адрес '],
+    [' Hisobingizni tasdiqlang, keyin email va parolingiz bilan kiring.', '. Confirm your account, then sign in with your email and password.', '. Подтвердите аккаунт, затем войдите с помощью email и пароля.'],
+    ['email manzilingiz', 'your email address', 'ваш email'],
+    ['Tasdiqladim · Kirishga o‘tish', 'I have confirmed · Continue to sign in', 'Подтвердил · Перейти ко входу'],
+    ['Tasdiqlash xatini qayta yuborish', 'Resend confirmation email', 'Отправить письмо подтверждения ещё раз'],
+    ['Kirishga qaytish', 'Back to sign in', 'Вернуться ко входу'],
+    ['Hisob yarating', 'Create your account', 'Создать аккаунт'],
+    ['Qaytganingizdan xursandmiz', 'Welcome back', 'С возвращением'],
+    ['O‘rganishni boshlang, loyihalar yarating va ishlaringizni bir joyda saqlang.', 'Start learning, build projects, and keep your work in one place.', 'Начните учиться, создавайте проекты и храните работу в одном месте.'],
+    ['O‘rganish va yaratishni davom ettirish uchun kiring.', 'Sign in to continue learning and building.', 'Войдите, чтобы продолжить учиться и создавать.'],
+    ['Ismingiz', 'Your name', 'Ваше имя'],
+    ['Email manzili', 'Email address', 'Адрес электронной почты'],
+    ['Parol', 'Password', 'Пароль'],
+    ['Hisob yaratish', 'Create account', 'Создать аккаунт'],
+    ['Yangi foydalanuvchimisiz?', 'New to LumenCo?', 'Впервые в LumenCo?'],
+    ['Hisobingiz bormi?', 'Already have an account?', 'Уже есть аккаунт?'],
+    ['Endi email va parolingiz bilan kiring.', 'Now sign in with your email and password.', 'Теперь войдите с помощью email и пароля.'],
+    ['Tasdiqlash havolasini emailingizga yubordik.', 'We sent a confirmation link to your email.', 'Мы отправили ссылку для подтверждения на вашу почту.'],
+    ['Yangi tasdiqlash xati yuborildi.', 'A new confirmation email has been sent.', 'Новое письмо для подтверждения отправлено.'],
+    ['LumenCo’ga xush kelibsiz.', 'Welcome to LumenCo.', 'Добро пожаловать в LumenCo.']
   ];
 
   const dictionaries = { uz: {}, en: {}, ru: {} };
