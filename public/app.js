@@ -62,8 +62,65 @@ const app = {
   backend: 'local',
   authenticated: false,
   authMode: 'signin',
+  pendingEmail: '',
+  pendingPassword: '',
   authNotice: ''
 };
+
+let confirmPollTimer = null;
+
+function stopConfirmPoll() {
+  if (confirmPollTimer) {
+    clearInterval(confirmPollTimer);
+    confirmPollTimer = null;
+  }
+}
+
+function startConfirmPoll() {
+  stopConfirmPoll();
+  if (app.authMode !== 'confirm' || !app.pendingEmail || !app.pendingPassword) return;
+  confirmPollTimer = setInterval(async () => {
+    if (app.authMode !== 'confirm' || !app.pendingEmail || !app.pendingPassword) {
+      stopConfirmPoll();
+      return;
+    }
+    try {
+      await LumenBackend.signIn(app.pendingEmail, app.pendingPassword);
+      stopConfirmPoll();
+      toast('Email tasdiqlandi! Xush kelibsiz.');
+      app.authenticated = true;
+      app.authMode = 'signin';
+      app.pendingPassword = '';
+      app.state = await request('/api/state');
+      app.projectId = app.state.projects[0]?.id || null;
+      const project = getProject();
+      app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
+      render();
+    } catch {
+      // Waiting for email confirmation
+    }
+  }, 4500);
+}
+
+window.addEventListener('focus', async () => {
+  if (app.authMode === 'confirm' && app.pendingEmail && app.pendingPassword) {
+    try {
+      await LumenBackend.signIn(app.pendingEmail, app.pendingPassword);
+      stopConfirmPoll();
+      toast('Email tasdiqlandi! Xush kelibsiz.');
+      app.authenticated = true;
+      app.authMode = 'signin';
+      app.pendingPassword = '';
+      app.state = await request('/api/state');
+      app.projectId = app.state.projects[0]?.id || null;
+      const project = getProject();
+      app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
+      render();
+    } catch {
+      // not yet confirmed
+    }
+  }
+});
 
 function icon(name, extra = '') {
   return `<span class="icon ${extra}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[name] || ICONS.file}</svg></span>`;
@@ -193,10 +250,18 @@ function renderShell(content) {
 }
 
 function renderAuth() {
+  if (app.authMode === 'confirm') {
+    startConfirmPoll();
+    appRoot.innerHTML = `<main class="auth-page"><section class="auth-card"><div class="auth-brand"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-word">LumenCo<small>Build. Keep growing.</small></span><label class="locale-picker-label"><span class="sr-only">Language</span><select class="locale-picker" aria-label="Language" data-locale-picker><option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option><option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option><option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option></select></label></div><div class="confirm-badge"><div class="confirm-icon-pulse">✉️</div></div><h1 style="text-align:center">Emailingizni tasdiqlang</h1><p class="auth-intro" style="text-align:center">Biz <strong>${escapeHtml(app.pendingEmail || 'emailingiz')}</strong> manziliga tasdiqlash havolasini yubordik. Hisobingizni faollashtirish uchun pochtangizni oching va xatdagi havolani bosing.</p><div class="confirm-status-card"><span class="confirm-spinner"></span><span class="confirm-status-text">Tasdiqlanishi kutilmoqda...</span></div>${app.authNotice ? `<div class="auth-notice">${escapeHtml(app.authNotice)}</div>` : ''}<div class="confirm-actions" style="display:flex;flex-direction:column;gap:10px;margin-top:16px"><button class="btn auth-submit" type="button" data-action="auth-check-now">Tasdiqladim, tizimga kirish ${icon('arrow')}</button><button class="btn" type="button" data-action="auth-resend" style="background:transparent;border:1px solid currentColor">Qayta xat yuborish</button></div><p class="auth-switch" style="margin-top:22px"><button type="button" data-action="auth-back-to-signin">Kirish oynasiga qaytish</button></p><div class="auth-footnote">Projects · Lessons · Code editor · Community</div></section><aside class="auth-side"><span class="auth-orbit"></span><div class="auth-side-copy"><span class="auth-kicker">BUILD YOUR NEXT IDEA</span><h2>Every line moves you forward.</h2><p>Learn, build and keep your work organized in one calm workspace.</p><div class="auth-code-card"><span>01&nbsp;&nbsp; const idea = "yours";</span><span>02&nbsp;&nbsp; build(idea);</span><span>03&nbsp;&nbsp; growTogether();</span></div></div><div class="auth-side-footer">A little progress, every day.</div></aside></main>`;
+    appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
+    document.documentElement.lang = app.locale;
+    return;
+  }
+  stopConfirmPoll();
   const isSignup = app.authMode === 'signup';
   const heading = isSignup ? 'Hisob yarating' : 'LumenCo hisobingizga kiring';
   const intro = isSignup ? 'Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.' : 'Loyihalaringiz va o‘sishingiz bitta joyda.';
-  appRoot.innerHTML = `<main class="auth-page"><section class="auth-card"><div class="auth-brand"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-word">LumenCo<small>Build. Keep growing.</small></span><label class="locale-picker-label"><span class="sr-only">Language</span><select class="locale-picker" aria-label="Language" data-locale-picker><option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option><option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option><option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option></select></label></div><p class="eyebrow"><span class="status-dot"></span> LumenCo coding studio</p><h1>${heading}</h1><p class="auth-intro">${intro}</p>${app.authNotice ? `<div class="auth-notice">${escapeHtml(app.authNotice)}</div>` : ''}<form class="auth-form" data-form="auth">${isSignup ? `<div class="field"><label for="auth-name">Ismingiz</label><input id="auth-name" name="name" autocomplete="name" minlength="2" maxlength="40" required autofocus /></div>` : ''}<div class="field"><label for="auth-email">Email manzili</label><input id="auth-email" type="email" name="email" autocomplete="email" required ${isSignup ? '' : 'autofocus'} /></div><div class="field"><label for="auth-password">Parol</label><input id="auth-password" type="password" name="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" minlength="8" required />${isSignup ? '<small>Parol kamida 8 ta belgidan iborat bo‘lsin.</small>' : ''}</div><button class="btn auth-submit" type="submit">${isSignup ? 'Hisob yaratish' : 'Kirish'} ${icon('arrow')}</button></form><p class="auth-switch">${isSignup ? 'Hisobingiz bormi?' : 'Hisobingiz yo‘qmi?'} <button type="button" data-action="auth-toggle">${isSignup ? 'Kirish' : 'Ro‘yxatdan o‘tish'}</button></p><div class="auth-footnote">Projects · Lessons · Code editor · Community</div></section><aside class="auth-side"><span class="auth-orbit"></span><div class="auth-side-copy"><span class="auth-kicker">BUILD YOUR NEXT IDEA</span><h2>Every line moves you forward.</h2><p>Learn, build and keep your work organized in one calm workspace.</p><div class="auth-code-card"><span>01&nbsp;&nbsp; const idea = "yours";</span><span>02&nbsp;&nbsp; build(idea);</span><span>03&nbsp;&nbsp; growTogether();</span></div></div><div class="auth-side-footer">A little progress, every day.</div></aside></main>`;
+  appRoot.innerHTML = `<main class="auth-page"><section class="auth-card"><div class="auth-brand"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-word">LumenCo<small>Build. Keep growing.</small></span><label class="locale-picker-label"><span class="sr-only">Language</span><select class="locale-picker" aria-label="Language" data-locale-picker><option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option><option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option><option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option></select></label></div><p class="eyebrow"><span class="status-dot"></span> LumenCo coding studio</p><h1>${heading}</h1><p class="auth-intro">${intro}</p>${app.authNotice ? `<div class="auth-notice">${escapeHtml(app.authNotice)}</div>` : ''}<form class="auth-form" data-form="auth">${isSignup ? `<div class="field"><label for="auth-name">Ismingiz</label><input id="auth-name" name="name" autocomplete="name" minlength="2" maxlength="40" required autofocus /></div>` : ''}<div class="field"><label for="auth-email">Email manzili</label><input id="auth-email" type="email" name="email" value="${escapeHtml(app.pendingEmail)}" autocomplete="email" required ${isSignup ? '' : 'autofocus'} /></div><div class="field"><label for="auth-password">Parol</label><input id="auth-password" type="password" name="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" minlength="8" required />${isSignup ? '<small>Parol kamida 8 ta belgidan iborat bo‘lsin.</small>' : ''}</div><button class="btn auth-submit" type="submit">${isSignup ? 'Hisob yaratish' : 'Kirish'} ${icon('arrow')}</button></form><p class="auth-switch">${isSignup ? 'Hisobingiz bormi?' : 'Hisobingiz yo‘qmi?'} <button type="button" data-action="auth-toggle">${isSignup ? 'Kirish' : 'Ro‘yxatdan o‘tish'}</button></p><div class="auth-footnote">Projects · Lessons · Code editor · Community</div></section><aside class="auth-side"><span class="auth-orbit"></span><div class="auth-side-copy"><span class="auth-kicker">BUILD YOUR NEXT IDEA</span><h2>Every line moves you forward.</h2><p>Learn, build and keep your work organized in one calm workspace.</p><div class="auth-code-card"><span>01&nbsp;&nbsp; const idea = "yours";</span><span>02&nbsp;&nbsp; build(idea);</span><span>03&nbsp;&nbsp; growTogether();</span></div></div><div class="auth-side-footer">A little progress, every day.</div></aside></main>`;
   appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
   document.documentElement.lang = app.locale;
 }
@@ -722,6 +787,50 @@ async function handleClick(event) {
   if (!actionElement) return;
   const action = actionElement.dataset.action;
   if (action === 'auth-toggle') { app.authMode = app.authMode === 'signin' ? 'signup' : 'signin'; app.authNotice = ''; return renderAuth(); }
+  if (action === 'auth-back-to-signin') {
+    stopConfirmPoll();
+    app.authMode = 'signin';
+    app.authNotice = '';
+    return renderAuth();
+  }
+  if (action === 'auth-check-now') {
+    if (app.pendingEmail && app.pendingPassword) {
+      try {
+        await LumenBackend.signIn(app.pendingEmail, app.pendingPassword);
+        stopConfirmPoll();
+        toast('Email tasdiqlandi! Xush kelibsiz.');
+        app.authenticated = true;
+        app.authMode = 'signin';
+        app.pendingPassword = '';
+        app.state = await request('/api/state');
+        app.projectId = app.state.projects[0]?.id || null;
+        const project = getProject();
+        app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
+        return render();
+      } catch (err) {
+        toast('Email hali tasdiqlanmagan. Iltimos, pochtangizdagi havolani bosing.', 'error');
+        return;
+      }
+    } else {
+      stopConfirmPoll();
+      app.authMode = 'signin';
+      app.authNotice = 'Emailingizni tasdiqlagan bo‘lsangiz, parolingiz bilan kiring.';
+      return renderAuth();
+    }
+  }
+  if (action === 'auth-resend') {
+    if (!app.pendingEmail) {
+      toast('Email manzili topilmadi.', 'error');
+      return;
+    }
+    try {
+      await LumenBackend.resendConfirmation(app.pendingEmail);
+      toast('Tasdiqlash xati qayta yuborildi. Pochtani tekshiring.');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+    return;
+  }
   if (action === 'sign-out') {
     await LumenBackend.signOut();
     app.authenticated = false; app.state = null; app.authMode = 'signin'; app.authNotice = '';
@@ -792,17 +901,36 @@ async function handleSubmit(event) {
     const button = form.querySelector('button[type="submit"]');
     if (button) button.disabled = true;
     const email = String(values.get('email') || '').trim().toLowerCase();
+    const password = String(values.get('password') || '');
     try {
       if (app.authMode === 'signup') {
-        const result = await LumenBackend.signUp(email, String(values.get('password')), String(values.get('name')).trim());
+        const result = await LumenBackend.signUp(email, password, String(values.get('name')).trim());
         if (result.needsEmail) {
-          app.authMode = 'signin';
-          app.authNotice = 'Account created. Check your email to confirm it, then sign in.';
+          app.authMode = 'confirm';
+          app.pendingEmail = email;
+          app.pendingPassword = password;
+          app.authNotice = '';
           return renderAuth();
         }
-      } else await LumenBackend.signIn(email, String(values.get('password')));
+      } else {
+        try {
+          await LumenBackend.signIn(email, password);
+        } catch (signInErr) {
+          const msg = String(signInErr.message || '').toLowerCase();
+          const desc = String(signInErr.detail?.error_description || '').toLowerCase();
+          if (msg.includes('email not confirmed') || desc.includes('email not confirmed') || (signInErr.status === 400 && msg.includes('confirm'))) {
+            app.authMode = 'confirm';
+            app.pendingEmail = email;
+            app.pendingPassword = password;
+            app.authNotice = '';
+            return renderAuth();
+          }
+          throw signInErr;
+        }
+      }
       app.authenticated = true;
       app.authNotice = '';
+      app.pendingPassword = '';
       app.state = await request('/api/state');
       app.projectId = app.state.projects[0]?.id || null;
       const project = getProject();

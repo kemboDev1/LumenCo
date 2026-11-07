@@ -338,6 +338,15 @@ a { color: inherit; }
 .auth-switch button { padding: 0; border: 0; background: transparent; color: var(--blue-dark); font: inherit; font-weight: 700; }
 .auth-footnote { margin-top: auto; padding-top: 50px; color: #999ea7; font-size: 10px; text-align: center; }
 .auth-notice { margin-bottom: 18px; padding: 12px; border: 1px solid #dde8cf; border-radius: 10px; background: #f4f8ed; color: #596b43; font-size: 11px; line-height: 1.5; }
+.confirm-badge { display: flex; justify-content: center; margin-bottom: 22px; }
+.confirm-icon-pulse { width: 76px; height: 76px; border-radius: 50%; background: #eaf0ff; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 0 0 10px rgba(53, 72, 203, 0.08); animation: pulseConfirm 2.4s infinite ease-in-out; }
+@keyframes pulseConfirm {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 8px rgba(53, 72, 203, 0.08); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(53, 72, 203, 0.15); }
+}
+.confirm-status-card { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 16px 0 20px; padding: 13px 18px; background: #ffffff; border: 1px solid #e1e4e0; border-radius: 12px; font-size: 12px; color: #4b5565; box-shadow: 0 2px 8px rgba(0,0,0,.03); }
+.confirm-spinner { width: 14px; height: 14px; border: 2px solid #3548cb; border-top-color: transparent; border-radius: 50%; animation: spinConfirm 0.8s linear infinite; }
+@keyframes spinConfirm { to { transform: rotate(360deg); } }
 .auth-side { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; position: relative; padding: clamp(40px, 7vw, 100px); background: #29334f; color: #fff; }
 .auth-side::before { content: ""; width: min(58vw, 640px); aspect-ratio: 1; position: absolute; top: 9%; right: -17%; border: 1px solid rgba(230,237,255,.13); border-radius: 50%; box-shadow: 0 0 0 44px rgba(230,237,255,.025), 0 0 0 100px rgba(230,237,255,.025), 0 0 0 160px rgba(230,237,255,.018); }
 .auth-orbit { width: 190px; height: 190px; position: absolute; top: 18%; right: 23%; border: 1px solid rgba(209,245,121,.4); border-radius: 50%; }

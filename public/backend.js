@@ -230,7 +230,21 @@
         console.warn('Profil yaratishda xato:', err);
       }
     }
-    if (!profile) throw new Error('Profil topilmadi.');
+    if (!profile) {
+      profile = {
+        id: userId,
+        display_name: (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Builder').slice(0, 40),
+        username: (user.email?.split('@')[0] || 'builder').slice(0, 24),
+        bio: 'Building one project at a time.',
+        avatar_item: null,
+        tag_item: null,
+        frame_item: null,
+        premium_item: null,
+        premium_until: null,
+        xp: 0,
+        coins: 2100
+      };
+    }
     const projectFiles = await Promise.all(projects.map((project) => restGet(`/project_files${query({ project_id: `eq.${project.id}`, select: 'path,kind,content', order: 'path.asc' })}`)));
     const mappedProjects = projects.map((project, index) => {
       const fileRows = projectFiles[index] || [];
@@ -455,6 +469,19 @@
     saveSession(null);
   }
 
+  async function resendConfirmation(email) {
+    const redirect = encodeURIComponent(location.origin);
+    const response = await fetch(`${config.url}/auth/v1/resend`, {
+      method: 'POST',
+      headers: {
+        apikey: config.key,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({ type: 'signup', email, options: { email_redirect_to: location.origin } })
+    });
+    return readResponse(response);
+  }
+
   window.LumenBackend = {
     initialize,
     getSession: currentSession,
@@ -462,6 +489,7 @@
     signIn,
     signUp,
     signOut,
+    resendConfirmation,
     clearSession: () => saveSession(null)
   };
 })();
