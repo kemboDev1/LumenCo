@@ -15,17 +15,27 @@
     ['O‘zbekcha', 'Uzbek', 'Узбекский'],
     ['Ruscha', 'Russian', 'Русский'],
     ['Kirish', 'Sign in', 'Войти'],
+    ['Kirish', 'Sign In', 'Войти'],
     ['Ro‘yxatdan o‘tish', 'Create account', 'Создать аккаунт'],
+    ['Ro‘yxatdan o‘tish', 'Create Account', 'Создать аккаунт'],
     ['Email manzili', 'Email address', 'Адрес электронной почты'],
+    ['Email manzili', 'Email', 'Электронная почта'],
     ['Parol', 'Password', 'Пароль'],
     ['Ismingiz', 'Your name', 'Ваше имя'],
+    ['Ismingiz', 'Name', 'Имя'],
     ['Foydalanuvchi nomi', 'Username', 'Имя пользователя'],
     ['LumenCo hisobingizga kiring', 'Sign in to your LumenCo account', 'Войдите в аккаунт LumenCo'],
     ['Loyihalaringiz va o‘sishingiz bitta joyda.', 'Your projects and progress, in one place.', 'Ваши проекты и прогресс — в одном месте.'],
     ['Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.', 'Start for free. Learn to code and build projects.', 'Начните бесплатно. Учитесь программировать и создавайте проекты.'],
     ['Hisob yaratish', 'Create your account', 'Создайте аккаунт'],
+    ['Hisob yaratish', 'Create account', 'Создать аккаунт'],
+    ['Hisob yaratish', 'Create Account', 'Создать аккаунт'],
+    ['Hisob yarating', 'Create account', 'Создайте аккаунт'],
+    ['Hisob yarating', 'Create an account', 'Создайте аккаунт'],
     ['Parol kamida 8 ta belgi bo‘lsin.', 'Use at least 8 characters for your password.', 'Пароль должен содержать не менее 8 символов.'],
+    ['Parol kamida 8 ta belgidan iborat bo‘lsin.', 'Password must be at least 8 characters.', 'Пароль должен содержать не менее 8 символов.'],
     ['Hisobingiz bormi?', 'Already have an account?', 'Уже есть аккаунт?'],
+    ['Hisobingiz yo‘qmi?', 'Need an account?', 'Нужен аккаунт?'],
     ['Hisobingiz yo‘qmi?', 'New to LumenCo?', 'Впервые в LumenCo?'],
     ['Emailingizni tekshiring', 'Check your email', 'Проверьте почту'],
     ['Hisobni ochish uchun tasdiqlash havolasini emailga yubordik.', 'We sent a confirmation link to your email to finish creating your account.', 'Мы отправили ссылку подтверждения на вашу почту, чтобы завершить создание аккаунта.'],
@@ -367,12 +377,12 @@
     ['Bunday loyiha topilmadi.', 'This project could not be found.', 'Этот проект не найден.'],
     ['Xarid muvaffaqiyatli yakunlandi.', 'Purchase complete.', 'Покупка завершена.'],
     ['Har bir qatorda yangi imkoniyat.', 'A new possibility in every line.', 'Новая возможность в каждой строке.'],
-    ['LumenCo coding studio', 'LumenCo coding studio', 'Студия программирования LumenCo'],
-    ['BUILD YOUR NEXT IDEA', 'BUILD YOUR NEXT IDEA', 'СОЗДАЙТЕ СЛЕДУЮЩУЮ ИДЕЮ'],
-    ['Every line moves you forward.', 'Every line moves you forward.', 'Каждая строка помогает расти.'],
-    ['Learn, build and keep your work organized in one calm workspace.', 'Learn, build and keep your work organized in one calm workspace.', 'Учитесь, создавайте и храните проекты в удобном рабочем пространстве.'],
-    ['A little progress, every day.', 'A little progress, every day.', 'Небольшой прогресс каждый день.'],
-    ['Projects · Lessons · Code editor · Community', 'Projects · Lessons · Code editor · Community', 'Проекты · Уроки · Редактор кода · Сообщество'],
+    ['LumenCo dasturlash studiyasi', 'LumenCo coding studio', 'Студия программирования LumenCo'],
+    ['KEYINGI G‘OYANGIZNI YARATING', 'BUILD YOUR NEXT IDEA', 'СОЗДАЙТЕ СЛЕДУЮЩУЮ ИДЕЮ'],
+    ['Har bir qator sizni oldinga yetaklaydi.', 'Every line moves you forward.', 'Каждая строка помогает расти.'],
+    ['O‘rganing, yarating va barcha ishingizni bitta qulay muhitda saqlang.', 'Learn, build and keep your work organized in one calm workspace.', 'Учитесь, создавайте и храните проекты в удобном рабочем пространстве.'],
+    ['Har kuni kichik bir qadam.', 'A little progress, every day.', 'Небольшой прогресс каждый день.'],
+    ['Loyihalar · Darslar · Kod muharriri · Hamjamiyat', 'Projects · Lessons · Code editor · Community', 'Проекты · Уроки · Редактор кода · Сообщество'],
     ['daqiqa', 'min', 'мин'],
     ['daqiqada', 'minutes', 'минут'],
     ['Yangi loyiha boshlash', 'Start a project', 'Начать проект'],
@@ -613,23 +623,36 @@
 
   const dictionaries = { uz: {}, en: {}, ru: {} };
   for (const [uz, en, ru] of entries) {
-    dictionaries.en[uz] = en;
-    dictionaries.ru[uz] = ru;
-    dictionaries.ru[en] = ru;
+    if (!uz || !en || !ru) continue;
+    dictionaries.uz[uz] = uz;
     dictionaries.uz[en] = uz;
     dictionaries.uz[ru] = uz;
+
+    dictionaries.en[uz] = en;
+    dictionaries.en[en] = en;
+    dictionaries.en[ru] = en;
+
+    dictionaries.ru[uz] = ru;
+    dictionaries.ru[en] = ru;
+    dictionaries.ru[ru] = ru;
   }
   const sortedKeys = {
-    en: Object.keys(dictionaries.en).sort((a, b) => b.length - a.length),
-    ru: Object.keys(dictionaries.ru).sort((a, b) => b.length - a.length)
+    uz: Object.keys(dictionaries.uz).filter((k) => typeof dictionaries.uz[k] === 'string' && k !== dictionaries.uz[k]).sort((a, b) => b.length - a.length),
+    en: Object.keys(dictionaries.en).filter((k) => typeof dictionaries.en[k] === 'string' && k !== dictionaries.en[k]).sort((a, b) => b.length - a.length),
+    ru: Object.keys(dictionaries.ru).filter((k) => typeof dictionaries.ru[k] === 'string' && k !== dictionaries.ru[k]).sort((a, b) => b.length - a.length)
   };
 
   function translateText(value, locale = 'en') {
+    if (typeof value !== 'string') return value;
     const dictionary = dictionaries[locale] || dictionaries.en;
     if (Object.hasOwn(dictionary, value)) return dictionary[value];
     let result = value;
-    for (const key of sortedKeys[locale] || sortedKeys.en) {
-      if (result.includes(key)) result = result.split(key).join(dictionary[key]);
+    const keys = sortedKeys[locale] || sortedKeys.en || [];
+    for (const key of keys) {
+      const replacement = dictionary[key];
+      if (typeof replacement === 'string' && replacement !== key && result.includes(key)) {
+        result = result.split(key).join(replacement);
+      }
     }
     return result;
   }
