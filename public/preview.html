@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LumenCo project preview</title>
+  <style>
+    html, body { min-height: 100%; margin: 0; }
+    body { font-family: system-ui, sans-serif; }
+    #preview-empty { padding: 24px; color: #52615a; }
+  </style>
+</head>
+<body>
+  <main id="preview-empty">Loading project preview…</main>
+  <script>
+    (() => {
+      const maxFileLength = 180000;
+      const maxTotalLength = 2000000;
+
+      function resolveLocalPath(value) {
+        const path = String(value || '').trim().split(/[?#]/, 1)[0].replace(/^\.\/+/, '');
+        if (!path || path.startsWith('/') || path.includes('\\') || path.split('/').some((part) => part === '..')) return null;
+        return path;
+      }
+
+      function acceptedFiles(value) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+        const entries = Object.entries(value);
+        if (entries.length > 300) return null;
+        let total = 0;
+        const files = Object.create(null);
+        for (const [rawPath, content] of entries) {
+          const path = resolveLocalPath(rawPath);
+          if (!path || typeof content !== 'string' || content.length > maxFileLength) return null;
+          total += content.length;
+          if (total > maxTotalLength) return null;
+          files[path] = content;
+        }
+        return files;
+      }
+
+      function renderProject(files) {
+        const source = files['index.html'] || '<!doctype html><html><head></head><body><main><h2>Start building your project.</h2></main></body></html>';
+        const parsed = new DOMParser().parseFromString(source, 'text/html');
+        const styles = [];
+        const scripts = [];
+
+        parsed.querySelectorAll('link[rel~="stylesheet"]').forEach((link) => {
+          const path = resolveLocalPath(link.getAttribute('href'));
+          if (path && typeof files[path] === 'string') styles.push(files[path]);
+          link.remove();
+        });
+        parsed.querySelectorAll('link, base, meta[http-equiv]').forEach((node) => node.remove());
+        parsed.querySelectorAll('style').forEach((style) => {
+          styles.push(style.textContent || '');
+          style.remove();
+        });
+        parsed.querySelectorAll('script').forEach((script) => {
+          const type = (script.getAttribute('type') || '').trim().toLowerCase();
+          if (!type || type === 'text/javascript' || type === 'application/javascript' || type === 'module') {
+            const src = script.getAttribute('src');
+            if (src) {
+              const path = resolveLocalPath(src);
+              if (path && typeof files[path] === 'string') scripts.push({ code: files[path], type });
+            } else if (script.textContent.trim()) {
+              scripts.push({ code: script.textContent, type });
+            }
+          }
+          script.remove();
+        });
+
+        document.title = parsed.title || 'LumenCo project preview';
+        document.documentElement.lang = parsed.documentElement.lang || 'en';
+        document.body.replaceChildren(...Array.from(parsed.body.childNodes));
+        for (const code of styles) {
+          const style = document.createElement('style');
+          style.textContent = code;
+          document.head.append(style);
+        }
+        for (const entry of scripts) {
+          const script = document.createElement('script');
+          if (entry.type) script.type = entry.type;
+          script.textContent = entry.code;
+          document.body.append(script);
+        }
+      }
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent || event.data?.type !== 'lumenco:project-preview') return;
+        const files = acceptedFiles(event.data.files);
+        if (files) renderProject(files);
+      });
+    })();
+  </script>
+</body>
+</html>
