@@ -54,12 +54,20 @@
   }
 
   async function refreshSession() {
-    if (!session?.refresh_token) throw new Error('Sessiya tugadi. Qayta kiring.');
-    const payload = await authFetch('/token?grant_type=refresh_token', {
-      method: 'POST', body: { refresh_token: session.refresh_token }
-    });
-    saveSession(normalizeSession(payload));
-    return session;
+    if (!session?.refresh_token) {
+      saveSession(null);
+      throw new Error('Sessiya tugadi. Qayta kiring.');
+    }
+    try {
+      const payload = await authFetch('/token?grant_type=refresh_token', {
+        method: 'POST', body: { refresh_token: session.refresh_token }
+      });
+      saveSession(normalizeSession(payload));
+      return session;
+    } catch (err) {
+      saveSession(null);
+      throw err;
+    }
   }
 
   async function currentSession(forceRefresh = false) {
@@ -82,9 +90,18 @@
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body)
     });
-    if (response.status === 401 && !retried) {
-      await currentSession(true);
-      return supabaseFetch(path, options, true);
+    if (response.status === 401) {
+      if (!retried) {
+        try {
+          await currentSession(true);
+          return supabaseFetch(path, options, true);
+        } catch {
+          saveSession(null);
+          throw new Error('Sessiya tugadi. Qayta kiring.');
+        }
+      }
+      saveSession(null);
+      throw new Error('Sessiya tugadi. Qayta kiring.');
     }
     return readResponse(response);
   }
@@ -192,8 +209,28 @@
       restGet(`/inventory${query({ profile_id: `eq.${userId}`, select: 'item_id' })}`),
       restGet(`/coin_ledger${query({ profile_id: `eq.${userId}`, select: 'id,delta,reason,created_at', order: 'created_at.desc', limit: '20' })}`)
     ]);
-    if (!profiles?.length) throw new Error('Profil topilmadi.');
-    const profile = profiles[0];
+    let profile = profiles?.[0];
+    if (!profile) {
+      try {
+        const baseName = (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Builder').trim();
+        const baseUsername = (baseName.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 18) || 'builder') + '_' + (user.id ? user.id.replace(/-/g, '').slice(0, 4) : '01');
+        await supabaseFetch('/profiles', {
+          method: 'POST',
+          body: {
+            id: userId,
+            display_name: baseName.slice(0, 40),
+            username: baseUsername,
+            bio: 'Building one project at a time.'
+          },
+          prefer: 'resolution=ignore-duplicates,return=minimal'
+        }).catch(() => {});
+        const recheck = await restGet(`/profiles${query({ id: `eq.${userId}`, select: 'id,username,display_name,bio,avatar_item,tag_item,frame_item,premium_item,premium_until,xp,coins' })}`);
+        if (recheck?.length) profile = recheck[0];
+      } catch (err) {
+        console.warn('Profil yaratishda xato:', err);
+      }
+    }
+    if (!profile) throw new Error('Profil topilmadi.');
     const projectFiles = await Promise.all(projects.map((project) => restGet(`/project_files${query({ project_id: `eq.${project.id}`, select: 'path,kind,content', order: 'path.asc' })}`)));
     const mappedProjects = projects.map((project, index) => {
       const fileRows = projectFiles[index] || [];

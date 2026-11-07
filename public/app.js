@@ -739,6 +739,11 @@ async function handleClick(event) {
   }
   if (action === 'navigate') return navigate(actionElement.dataset.screen);
   if (action === 'reload') return location.reload();
+  if (action === 'reset-session') {
+    LumenBackend.clearSession();
+    location.reload();
+    return;
+  }
   if (action === 'new-project') return openModal('new-project');
   if (action === 'new-file') return openModal('new-file');
   if (action === 'new-folder') return openModal('new-folder');
@@ -893,16 +898,30 @@ async function boot() {
   try {
     app.backend = await LumenBackend.initialize();
     if (app.backend === 'supabase') {
-      try { await LumenBackend.getSession(); app.authenticated = true; }
-      catch { app.authenticated = false; return renderAuth(); }
+      try {
+        await LumenBackend.getSession();
+        app.authenticated = true;
+        app.state = await request('/api/state');
+      } catch (authError) {
+        console.warn('Auth yoki sessiya xatosi:', authError);
+        LumenBackend.clearSession();
+        app.authenticated = false;
+        return renderAuth();
+      }
+    } else {
+      app.state = await request('/api/state');
     }
-    app.state = await request('/api/state');
     app.projectId = app.state.projects[0]?.id || null;
     const project = getProject();
     app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
     render();
-  } catch {
-    appRoot.innerHTML = LumenI18n.translateMarkup(`<main class="boot-screen"><div class="boot-error"><span class="brand-mark">L</span><strong>Serverga ulanib bo‘lmadi</strong><p>LumenCo’ni papkadan ochish o‘rniga terminalda <code>npm start</code> buyrug‘ini ishga tushir, keyin localhost:3000 manzilini och.</p><button class="btn" type="button" data-action="reload">Qayta urinish</button></div></main>`, app.locale);
+  } catch (error) {
+    console.error('Boot error:', error);
+    const isLocal = app.backend === 'local' || (!app.backend && location.hostname === 'localhost');
+    const tipText = isLocal
+      ? 'LumenCo’ni papkadan ochish o‘rniga terminalda <code>npm start</code> buyrug‘ini ishga tushir, keyin localhost:3000 manzilini och.'
+      : 'Internet yoki server bilan aloqa uzildi. Qayta urinib ko‘ring yoki hisobdan chiqib qayta kiring.';
+    appRoot.innerHTML = LumenI18n.translateMarkup(`<main class="boot-screen"><div class="boot-error"><span class="brand-mark">L</span><strong>Serverga ulanib bo‘lmadi</strong><p>${tipText}</p><div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"><button class="btn" type="button" data-action="reload">Qayta urinish</button><button class="btn" type="button" data-action="reset-session" style="background:transparent;border:1px solid currentColor">Hisobdan chiqish</button></div></div></main>`, app.locale);
   }
 }
 
