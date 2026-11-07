@@ -39,12 +39,13 @@
     return data;
   }
 
-  async function authFetch(path, options = {}, bearer = config?.key) {
+  async function authFetch(path, options = {}, bearer = null) {
+    const token = bearer || session?.access_token || config?.key;
     const response = await fetch(`${config.url}/auth/v1${path}`, {
       method: options.method || 'GET',
       headers: {
         apikey: config.key,
-        authorization: `Bearer ${bearer || config.key}`,
+        authorization: `Bearer ${token}`,
         'content-type': 'application/json',
         ...(options.headers || {})
       },
@@ -291,11 +292,13 @@
     const name = typeof body.name === 'string' ? body.name.trim() : '';
     const template = ['blank','portfolio','webapp'].includes(body.template) ? body.template : 'blank';
     if (name.length < 2 || name.length > 48) throw new Error('Loyiha nomi 2–48 belgi orasida bo‘lsin.');
+    const activeSession = await currentSession();
+    const user = await authFetch('/user', {}, activeSession.access_token);
+    const userId = user.id;
     const current = await loadState();
     if (current.projects.length >= 100) throw new Error('Hozircha 100 tagacha loyiha yaratish mumkin.');
-    const user = await authFetch('/user');
     const created = await supabaseFetch(`/projects${query({ select: 'id' })}`, {
-      method: 'POST', body: { owner_id: user.id, name, template }, prefer: 'return=representation'
+      method: 'POST', body: { owner_id: userId, name, template }, prefer: 'return=representation'
     });
     const projectId = created?.[0]?.id;
     if (!projectId) throw new Error('Loyiha yaratilmadi.');
@@ -379,7 +382,8 @@
       if (name.length < 2 || name.length > 40) throw new Error('Ism 2–40 belgi orasida bo‘lsin.');
       if (!/^[a-z0-9._]{3,24}$/.test(username)) throw new Error('Foydalanuvchi nomi 3–24 belgi: a–z, raqam, nuqta yoki pastki chiziq.');
       if (bio.length > 160) throw new Error('Bio 160 belgidan oshmasin.');
-      const user = await authFetch('/user');
+      const activeSession = await currentSession();
+      const user = await authFetch('/user', {}, activeSession.access_token);
       await supabaseFetch(`/profiles${query({ id: `eq.${user.id}` })}`, {
         method: 'PATCH', body: { display_name: name, username, bio }, prefer: 'return=representation'
       });
