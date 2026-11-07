@@ -426,6 +426,15 @@
     config.url = String(config.url || '').replace(/\/$/, '');
     session = readSession();
     const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const errorDesc = fragment.get('error_description') || new URLSearchParams(location.search).get('error_description');
+    if (errorDesc) {
+      history.replaceState(null, '', `${location.pathname}`);
+      window.setTimeout(() => {
+        if (typeof window.toast === 'function') {
+          window.toast(decodeURIComponent(errorDesc.replace(/\+/g, ' ')), 'error');
+        }
+      }, 300);
+    }
     const accessToken = fragment.get('access_token');
     const refreshToken = fragment.get('refresh_token');
     if (accessToken && refreshToken) {

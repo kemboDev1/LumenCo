@@ -187,6 +187,7 @@ function toast(message, type = 'success') {
   toastRoot.appendChild(item);
   window.setTimeout(() => item.remove(), 3500);
 }
+window.toast = toast;
 
 function screenName(screen) {
   return ({ workspace: 'Ish maydoni', editor: 'Kod muharriri', lessons: 'Darslar', shop: 'Coin do‘koni', profile: 'Profil' })[screen] || 'Ish maydoni';
