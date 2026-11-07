@@ -62,8 +62,6 @@ const app = {
   backend: 'local',
   authenticated: false,
   authMode: 'signin',
-  authStep: 'email',
-  authEmail: '',
   authNotice: ''
 };
 
@@ -202,18 +200,13 @@ function renderAuth() {
   appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
   const authForm = appRoot.querySelector('.auth-form');
   const authSwitcher = appRoot.querySelector('.auth-switch');
-  const enteringCode = app.authStep === 'code';
   if (authForm) {
-    authForm.innerHTML = enteringCode
-      ? `<div class="field"><label for="auth-email">Email manzili</label><input id="auth-email" type="email" name="email" value="${escapeHtml(app.authEmail)}" readonly /></div><div class="field"><label for="auth-code">Emailga kelgan 6 xonali kod</label><input id="auth-code" name="token" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required autofocus /><small>Kodni kiriting. U avtomatik tekshiriladi.</small></div>`
-      : `<div class="field"><label for="auth-email">Email manzili</label><input id="auth-email" type="email" name="email" autocomplete="email" required autofocus /></div><button class="btn auth-submit" type="submit">Kod yuborish ${icon('arrow')}</button>`;
+    authForm.innerHTML = `${isSignup ? '<div class="field"><label for="auth-name">Name</label><input id="auth-name" name="name" autocomplete="name" minlength="2" maxlength="40" required autofocus /></div>' : ''}<div class="field"><label for="auth-email">Email</label><input id="auth-email" type="email" name="email" autocomplete="email" required ${isSignup ? '' : 'autofocus'} /></div><div class="field"><label for="auth-password">Password</label><input id="auth-password" type="password" name="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" minlength="8" required /><small>${isSignup ? 'Password kamida 8 ta belgidan iborat bo‘lsin.' : ''}</small></div><button class="btn auth-submit" type="submit">${isSignup ? 'Create Account' : 'Sign In'} ${icon('arrow')}</button>`;
     authForm.innerHTML = LumenI18n.translateMarkup(authForm.innerHTML, app.locale);
   }
   if (authSwitcher) {
-    if (enteringCode) {
-      authSwitcher.innerHTML = '<button type="button" data-action="auth-resend-code">Kodni qayta yuborish</button> · <button type="button" data-action="auth-email-back">Emailni o‘zgartirish</button>';
-      authSwitcher.innerHTML = LumenI18n.translateMarkup(authSwitcher.innerHTML, app.locale);
-    } else authSwitcher.remove();
+    authSwitcher.innerHTML = `${isSignup ? 'Already have an account?' : 'Need an account?'} <button type="button" data-action="auth-toggle">${isSignup ? 'Sign In' : 'Create Account'}</button>`;
+    authSwitcher.innerHTML = LumenI18n.translateMarkup(authSwitcher.innerHTML, app.locale);
   }
   document.documentElement.lang = app.locale;
 }
@@ -738,16 +731,10 @@ async function handleClick(event) {
   const actionElement = event.target.closest('[data-action]');
   if (!actionElement) return;
   const action = actionElement.dataset.action;
-  if (action === 'auth-email-back') { app.authStep = 'email'; app.authNotice = ''; return renderAuth(); }
-  if (action === 'auth-resend-code') {
-    try { await LumenBackend.sendEmailCode(app.authEmail); app.authNotice = `Yangi kod ${app.authEmail} manziliga yuborildi.`; renderAuth(); }
-    catch (error) { toast(error.message, 'error'); }
-    return;
-  }
   if (action === 'auth-toggle') { app.authMode = app.authMode === 'signin' ? 'signup' : 'signin'; app.authNotice = ''; return renderAuth(); }
   if (action === 'sign-out') {
     await LumenBackend.signOut();
-    app.authenticated = false; app.state = null; app.authMode = 'signin'; app.authStep = 'email'; app.authEmail = ''; app.authNotice = '';
+    app.authenticated = false; app.state = null; app.authMode = 'signin'; app.authNotice = '';
     return renderAuth();
   }
   if (action === 'navigate') return navigate(actionElement.dataset.screen);
@@ -809,19 +796,17 @@ async function handleSubmit(event) {
   if (kind === 'auth') {
     const button = form.querySelector('button[type="submit"]');
     if (button) button.disabled = true;
-    const email = String(values.get('email') || app.authEmail).trim().toLowerCase();
+    const email = String(values.get('email') || '').trim().toLowerCase();
     try {
-      if (app.authStep === 'email') {
-        await LumenBackend.sendEmailCode(email);
-        app.authEmail = email;
-        app.authStep = 'code';
-        app.authNotice = `Kirish kodi ${email} manziliga yuborildi.`;
-        return renderAuth();
-      }
-      await LumenBackend.verifyEmailCode(email, String(values.get('token')).trim());
+      if (app.authMode === 'signup') {
+        const result = await LumenBackend.signUp(email, String(values.get('password')), String(values.get('name')).trim());
+        if (result.needsEmail) {
+          app.authMode = 'signin';
+          app.authNotice = 'Account created. Check your email to confirm it, then sign in.';
+          return renderAuth();
+        }
+      } else await LumenBackend.signIn(email, String(values.get('password')));
       app.authenticated = true;
-      app.authStep = 'email';
-      app.authEmail = '';
       app.authNotice = '';
       app.state = await request('/api/state');
       app.projectId = app.state.projects[0]?.id || null;
@@ -882,13 +867,6 @@ async function handleChange(event) {
 function handleInput(event) {
   const element = event.target;
   if (element.matches('[data-role="code-input"]')) markDirty(element.value);
-  if (element.matches('#auth-code')) {
-    element.value = element.value.replace(/\D/g, '').slice(0, 6);
-    if (element.value.length === 6 && !element.form.dataset.submitting) {
-      element.form.dataset.submitting = 'true';
-      element.form.requestSubmit();
-    }
-  }
 }
 
 function handleKeydown(event) {

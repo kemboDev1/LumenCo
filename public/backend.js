@@ -390,21 +390,27 @@
     return 'supabase';
   }
 
-  async function sendEmailCode(email) {
-    await authFetch('/otp', {
+  async function signIn(email, password) {
+    const payload = await authFetch('/token?grant_type=password', {
       method: 'POST',
-      body: { email, create_user: true }
+      body: { email, password }
     });
-  }
-
-  async function verifyEmailCode(email, token) {
-    const payload = await authFetch('/verify', {
-      method: 'POST',
-      body: { email, token, type: 'email' }
-    });
-    if (!payload.access_token) throw new Error('Kod noto‘g‘ri yoki muddati tugagan.');
+    if (!payload.access_token) throw new Error('Email yoki parol noto‘g‘ri.');
     saveSession(normalizeSession(payload));
     return authFetch('/user', {}, session.access_token);
+  }
+
+  async function signUp(email, password, name) {
+    const redirect = encodeURIComponent(location.origin);
+    const payload = await authFetch(`/signup?redirect_to=${redirect}`, {
+      method: 'POST',
+      body: { email, password, data: { display_name: name } }
+    });
+    if (payload.access_token) saveSession(normalizeSession(payload));
+    if (payload.user?.id && payload.access_token) {
+      return { user: await authFetch('/user', {}, session.access_token), needsEmail: false };
+    }
+    return { user: payload.user || null, needsEmail: true };
   }
 
   async function signOut() {
@@ -416,8 +422,8 @@
     initialize,
     getSession: currentSession,
     apiRequest,
-    sendEmailCode,
-    verifyEmailCode,
+    signIn,
+    signUp,
     signOut,
     clearSession: () => saveSession(null)
   };
