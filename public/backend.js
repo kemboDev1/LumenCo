@@ -186,43 +186,43 @@
     };
   }
 
-  // Atomjs shop catalog matching user screenshots
+  // LumenCo shop catalog
   const FULL_SHOP_ITEMS = [
     // Animatsiyali ramkalar
-    { id: 'frame-yalpiz', name: 'Yalpiz', category: 'Ramkalar', emoji: '🟢', description: 'Qatoringiz atrofida aylanib turadi — yalpiz neoni.', kind: 'frame', price: 100, days: null },
-    { id: 'frame-okean', name: 'Okean', category: 'Ramkalar', emoji: '🌊', description: 'Okean to‘lqini kabi moviy aylanma nur.', kind: 'frame', price: 150, days: null },
-    { id: 'frame-olov', name: 'Olov', category: 'Ramkalar', emoji: '🔥', description: 'Qizg‘in olov kabi yonib turuvchi olovli ramka.', kind: 'frame', price: 200, days: null },
-    { id: 'frame-shafaq', name: 'Shafaq', category: 'Ramkalar', emoji: '🌅', description: 'Kechki shafaq tusidagi binafsha-pushti gradient.', kind: 'frame', price: 250, days: null },
-    { id: 'frame-kiber', name: 'Kiber', category: 'Ramkalar', emoji: '⚡', description: 'Kiberpank matritsa neonli puls ramkasi.', kind: 'frame', price: 300, days: null },
-    { id: 'frame-noyob', name: 'Noyob', category: 'Ramkalar', emoji: '⚠️', description: 'Haqiqiy afsonaviy sariq-qora ogohlantiruvchi VIP ramka.', kind: 'frame', price: 500, days: null, isRare: true },
+    { id: 'frame-yalpiz', name: 'Yalpiz', category: 'Ramkalar', iconName: 'sparkle', description: 'Qatoringiz atrofida aylanib turadi — yalpiz neoni.', kind: 'frame', price: 100, days: null },
+    { id: 'frame-okean', name: 'Okean', category: 'Ramkalar', iconName: 'layers', description: 'Okean to‘lqini kabi moviy aylanma nur.', kind: 'frame', price: 150, days: null },
+    { id: 'frame-olov', name: 'Olov', category: 'Ramkalar', iconName: 'flame', description: 'Qizg‘in olov kabi yonib turuvchi olovli ramka.', kind: 'frame', price: 200, days: null },
+    { id: 'frame-shafaq', name: 'Shafaq', category: 'Ramkalar', iconName: 'sparkle', description: 'Kechki shafaq tusidagi binafsha-pushti gradient.', kind: 'frame', price: 250, days: null },
+    { id: 'frame-kiber', name: 'Kiber', category: 'Ramkalar', iconName: 'zap', description: 'Kiberpank matritsa neonli puls ramkasi.', kind: 'frame', price: 300, days: null },
+    { id: 'frame-noyob', name: 'Noyob', category: 'Ramkalar', iconName: 'shield', description: 'Haqiqiy afsonaviy sariq-qora ogohlantiruvchi VIP ramka.', kind: 'frame', price: 500, days: null, isRare: true },
 
     // Fonlar
-    { id: 'bg-yalpiz', name: 'Yalpiz', category: 'Fonlar', emoji: '🌿', description: 'Qatoringiz orqasidagi bezak — yalpiz zumrad gradient.', kind: 'bg', price: 150, days: null },
-    { id: 'bg-konfet', name: 'Konfet', category: 'Fonlar', emoji: '🍬', description: 'Shirin konfet tusidagi mayin kechki fon.', kind: 'bg', price: 200, days: null },
-    { id: 'bg-shom', name: 'Shom', category: 'Fonlar', emoji: '🌌', description: 'Qorong‘u osmondagi qizil-binafsha shom shulasi.', kind: 'bg', price: 250, days: null },
-    { id: 'bg-okean', name: 'Okean', category: 'Fonlar', emoji: '🌊', description: 'Tungi okean tubidagi chuqur moviy gradient.', kind: 'bg', price: 250, days: null },
-    { id: 'bg-nuqtalar', name: 'Nuqtalar', category: 'Fonlar', emoji: '⠇', description: 'Kiberpank geometrik nuqtalar matritsasi.', kind: 'bg', price: 300, days: null },
-    { id: 'bg-ogohlantirish', name: 'Ogohlantirish', category: 'Fonlar', emoji: '🚧', description: 'Ogohlantiruvchi sariq va qora chiziqli tekstura.', kind: 'bg', price: 350, days: null },
-    { id: 'bg-tolqinlar', name: 'To‘lqinlar', category: 'Fonlar', emoji: '〰️', description: 'Geometrik aylanma to‘lqinlar naqshi.', kind: 'bg', price: 400, days: null },
-    { id: 'bg-laboratoriya', name: 'Laboratoriya', category: 'Fonlar', emoji: '🔬', description: 'Yuqori texnologiyali kod laboratoriyasi to‘ri.', kind: 'bg', price: 500, days: null },
+    { id: 'bg-yalpiz', name: 'Yalpiz', category: 'Fonlar', iconName: 'palette', description: 'Qatoringiz orqasidagi bezak — yalpiz zumrad gradient.', kind: 'bg', price: 150, days: null },
+    { id: 'bg-konfet', name: 'Konfet', category: 'Fonlar', iconName: 'palette', description: 'Shirin konfet tusidagi mayin kechki fon.', kind: 'bg', price: 200, days: null },
+    { id: 'bg-shom', name: 'Shom', category: 'Fonlar', iconName: 'palette', description: 'Qorong‘u osmondagi qizil-binafsha shom shulasi.', kind: 'bg', price: 250, days: null },
+    { id: 'bg-okean', name: 'Okean', category: 'Fonlar', iconName: 'palette', description: 'Tungi okean tubidagi chuqur moviy gradient.', kind: 'bg', price: 250, days: null },
+    { id: 'bg-nuqtalar', name: 'Nuqtalar', category: 'Fonlar', iconName: 'palette', description: 'Kiberpank geometrik nuqtalar matritsasi.', kind: 'bg', price: 300, days: null },
+    { id: 'bg-ogohlantirish', name: 'Ogohlantirish', category: 'Fonlar', iconName: 'shield', description: 'Ogohlantiruvchi sariq va qora chiziqli tekstura.', kind: 'bg', price: 350, days: null },
+    { id: 'bg-tolqinlar', name: 'To‘lqinlar', category: 'Fonlar', iconName: 'layers', description: 'Geometrik aylanma to‘lqinlar naqshi.', kind: 'bg', price: 400, days: null },
+    { id: 'bg-laboratoriya', name: 'Laboratoriya', category: 'Fonlar', iconName: 'code', description: 'Yuqori texnologiyali kod laboratoriyasi to‘ri.', kind: 'bg', price: 500, days: null },
 
     // Muharrir temalari
-    { id: 'theme-dracula', name: 'Dracula', category: 'Muharrir', emoji: '🧛', description: 'Klassik qora-binafsha dasturchilar temasi.', kind: 'theme', price: 100, days: null },
-    { id: 'theme-monokai', name: 'Monokai', category: 'Muharrir', emoji: '🎨', description: 'Yorqin sariq va yashil sintaksis.', kind: 'theme', price: 100, days: null },
-    { id: 'theme-night-owl', name: 'Night Owl', category: 'Muharrir', emoji: '🦉', description: 'Tunda kod yozuvchilar uchun qulay mavzu.', kind: 'theme', price: 120, days: null },
-    { id: 'theme-cobalt2', name: 'Cobalt2', category: 'Muharrir', emoji: '💎', description: 'Wes Bos uslubidagi yorqin moviy va sariq tema.', kind: 'theme', price: 150, days: null },
-    { id: 'theme-claude', name: 'Claude Dark', category: 'Muharrir', emoji: '🤖', description: 'Zamonaviy issiq kofeyiy AI kod temasi.', kind: 'theme', price: 150, days: null },
-    { id: 'theme-nord', name: 'Nord', category: 'Muharrir', emoji: '❄️', description: 'Shimoliy sovuq pastel ranglar uyg‘unligi.', kind: 'theme', price: 180, days: null },
-    { id: 'theme-github-dark', name: 'GitHub Dark', category: 'Muharrir', emoji: '🐙', description: 'Rasmiy GitHub qorong‘i dizayn kodi.', kind: 'theme', price: 180, days: null },
-    { id: 'theme-oceanic', name: 'Oceanic Next', category: 'Muharrir', emoji: '🐬', description: 'Dengiz moviyligi va qulay kontrast.', kind: 'theme', price: 200, days: null },
+    { id: 'theme-dracula', name: 'Dracula', category: 'Muharrir', iconName: 'code', description: 'Klassik qora-binafsha dasturchilar temasi.', kind: 'theme', price: 100, days: null },
+    { id: 'theme-monokai', name: 'Monokai', category: 'Muharrir', iconName: 'code', description: 'Yorqin sariq va yashil sintaksis.', kind: 'theme', price: 100, days: null },
+    { id: 'theme-night-owl', name: 'Night Owl', category: 'Muharrir', iconName: 'code', description: 'Tunda kod yozuvchilar uchun qulay mavzu.', kind: 'theme', price: 120, days: null },
+    { id: 'theme-cobalt2', name: 'Cobalt2', category: 'Muharrir', iconName: 'code', description: 'Wes Bos uslubidagi yorqin moviy va sariq tema.', kind: 'theme', price: 150, days: null },
+    { id: 'theme-claude', name: 'Claude Dark', category: 'Muharrir', iconName: 'code', description: 'Zamonaviy issiq kofeyiy AI kod temasi.', kind: 'theme', price: 150, days: null },
+    { id: 'theme-nord', name: 'Nord', category: 'Muharrir', iconName: 'code', description: 'Shimoliy sovuq pastel ranglar uyg‘unligi.', kind: 'theme', price: 180, days: null },
+    { id: 'theme-github-dark', name: 'GitHub Dark', category: 'Muharrir', iconName: 'code', description: 'Rasmiy GitHub qorong‘i dizayn kodi.', kind: 'theme', price: 180, days: null },
+    { id: 'theme-oceanic', name: 'Oceanic Next', category: 'Muharrir', iconName: 'code', description: 'Dengiz moviyligi va qulay kontrast.', kind: 'theme', price: 200, days: null },
 
     // Avatarlar & Pet buyumlari
-    { id: 'avatar-cat', name: 'Kiber Mushuk', category: 'Avatarlar', emoji: '🐱', description: 'Piksel kiber mushuk avatari.', kind: 'avatar', price: 200, days: null },
-    { id: 'avatar-ninja', name: 'Kiber Ninja', category: 'Avatarlar', emoji: '🥷', description: 'Tungi kod ninja avatari.', kind: 'avatar', price: 250, days: null },
-    { id: 'avatar-robot', name: 'AI Robot', category: 'Avatarlar', emoji: '🤖', description: 'Futuristik sun‘iy intellekt avatari.', kind: 'avatar', price: 300, days: null },
-    { id: 'pet-wizard', name: 'Sehrgar Qalpog‘i', category: 'Pet', emoji: '🧙‍♂️', description: 'Lumi ustozi uchun sehrgar qalpoq.', kind: 'pet', price: 150, days: null },
-    { id: 'pet-vr', name: 'VR Ko‘zoynak', category: 'Pet', emoji: '🥽', description: 'Lumi uchun kiber VR garnitura.', kind: 'pet', price: 150, days: null },
-    { id: 'pet-crown', name: 'Oltin Toj', category: 'Pet', emoji: '👑', description: 'Lumi uchun imperator toji.', kind: 'pet', price: 300, days: null }
+    { id: 'avatar-cat', name: 'Kiber Mushuk', category: 'Avatarlar', iconName: 'user', description: 'Piksel kiber mushuk avatari.', kind: 'avatar', price: 200, days: null },
+    { id: 'avatar-ninja', name: 'Kiber Ninja', category: 'Avatarlar', iconName: 'user', description: 'Tungi kod ninja avatari.', kind: 'avatar', price: 250, days: null },
+    { id: 'avatar-robot', name: 'AI Robot', category: 'Avatarlar', iconName: 'user', description: 'Futuristik sun‘iy intellekt avatari.', kind: 'avatar', price: 300, days: null },
+    { id: 'pet-wizard', name: 'Sehrgar Qalpog‘i', category: 'Pet', iconName: 'sparkle', description: 'Lumi ustozi uchun sehrgar qalpoq.', kind: 'pet', price: 150, days: null },
+    { id: 'pet-vr', name: 'VR Ko‘zoynak', category: 'Pet', iconName: 'eye', description: 'Lumi uchun kiber VR garnitura.', kind: 'pet', price: 150, days: null },
+    { id: 'pet-crown', name: 'Oltin Toj', category: 'Pet', iconName: 'crown', description: 'Lumi uchun imperator toji.', kind: 'pet', price: 300, days: null }
   ];
 
   // Comprehensive curriculum: 20 Free, 100 Pro, 350 Max

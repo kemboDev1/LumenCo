@@ -28,10 +28,12 @@ const ICONS = {
   shield: '<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/>',
   play: '<path d="m8 5 11 7-11 7z"/>',
   fullscreen: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',
-  gamepad: '<line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="6"/>',
   keyboard: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M18 12h.01M8 16h8"/>',
   crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
-  gem: '<path d="M6 3h12l4 6-10 13L2 9zM2 9h20M12 22 8 9M12 22l4-13"/>'
+  gem: '<path d="M6 3h12l4 6-10 13L2 9zM2 9h20M12 22 8 9M12 22l4-13"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  palette: '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'
 };
 
 const appRoot = document.getElementById('app');
@@ -40,17 +42,14 @@ const toastRoot = document.getElementById('toast-root');
 
 const app = {
   state: null,
-  screen: 'workspace', // workspace, editor, compiler, typing, game, leaderboard, shop, plans, profile, admin
+  screen: 'workspace', // workspace, editor, compiler, typing, leaderboard, shop, plans, profile, admin
   projectId: null,
   filePath: null,
   modal: null,
   shopFilter: 'frame',
   lessonFilter: 'Barchasi',
   dirty: false,
-  saveTimer: null,
-  saving: false,
   modalLessonId: null,
-  pendingPurchaseId: null,
   locale: localStorage.getItem('lumenco-locale') || 'uz',
   backend: 'local',
   authenticated: false,
@@ -58,17 +57,17 @@ const app = {
   pendingEmail: '',
   pendingPassword: '',
   authNotice: '',
-  
-  // Live hover preview in Atomshop matching screenshots
+
+  // Live hover preview in Shop
   hoveredShopItem: null,
-  
+
   // Compiler state
   compilerTab: 'html',
-  compilerHtml: `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8">\n  <title>Kompilyator</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0f172a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #1e293b; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0f172a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Salom, Atomjs & LumenCo!</h1>\n    <p>Brauzerdagi to‘liq kod laboratoriyasi.</p>\n    <button onclick="salom()">Meni bos</button>\n  </div>\n  <script>\n    function salom() {\n      console.log('Tugma bosildi!');\n      alert('Kompilyator muvaffaqiyatli ishlayapti!');\n    }\n  </script>\n</body>\n</html>`,
-  compilerCss: `/* CSS kodlaringizni shu yerda yozing */\nbody {\n  margin: 0;\n}`,
-  compilerJs: `// JavaScript kodingiz\nconsole.log('LumenCo Kompilyator tayyor!');`,
-  compilerConsole: ['[Tizim] Kompilyator konsoli ishga tushdi.'],
-  
+  compilerHtml: `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8">\n  <title>LumenCo Kompilyator</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0c101a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #141b2d; border: 1px solid #1e2a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0c101a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Salom, LumenCo!</h1>\n    <p>Brauzerdagi shaxsiy kod laboratoriyangiz.</p>\n    <button onclick="salom()">Meni bos</button>\n  </div>\n  <script>\n    function salom() {\n      console.log('LumenCo tugmasi bosildi!');\n      alert('Kompilyator muvaffaqiyatli ishlayapti!');\n    }\n  </script>\n</body>\n</html>`,
+  compilerCss: `/* CSS stillaringiz */\nbody { margin: 0; }`,
+  compilerJs: `// JavaScript kodingiz\nconsole.log('LumenCo kompilyatori tayyor.');`,
+  compilerConsole: ['[Tizim] LumenCo laboratoriya konsoli faol.'],
+
   // Speed typing game state
   typingText: 'const createFuture = (code, passion) => code.build() && passion.grow();',
   typingIndex: 0,
@@ -80,14 +79,14 @@ const app = {
   typingWpm: 0,
   typingAcc: 100,
 
-  // Duolingo-style Pet state
+  // Duolingo-style Pet AI ("Lumi") state
   petBubbleIndex: 0,
   petPhrases: [
-    'Salom! Kod yozishga tayyormisan?',
-    'Kompilyatorni ochib yangi g‘oya yarat!',
-    'Tez yozishda yangi rekord qo‘yib coin to‘pla!',
+    'Salom, Muhammadbek! Bugun qaysi loyihani quramiz?',
+    'Kompilyatorda yangi g‘oya sinab ko‘ring!',
+    'Tez yozishda yangi rekord o‘rnatib, coin yig‘ing!',
     'Pro va Max darslarida ko‘proq XP kutmoqda!',
-    'Atomshopdan yangi animatsiyali ramka ol!'
+    'Do‘kondan yangi animatsiyali ramka tanlang!'
   ]
 };
 
@@ -111,7 +110,7 @@ function formatNumber(value) {
 function toast(message, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type === 'error' ? 'error' : ''}`;
-  el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${escapeHtml(message)}</span>`;
+  el.innerHTML = `${icon(type === 'error' ? 'shield' : 'sparkle')}<span>${escapeHtml(message)}</span>`;
   toastRoot.appendChild(el);
   setTimeout(() => {
     el.style.opacity = '0';
@@ -129,11 +128,8 @@ function setLocale(lang) {
 }
 
 function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  } else {
-    document.exitFullscreen().catch(() => {});
-  }
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  else document.exitFullscreen().catch(() => {});
 }
 
 async function request(url, options = {}) {
@@ -168,116 +164,307 @@ function navigate(screenName) {
 }
 
 /* ==========================================================================
-   TOPBAR COMPONENT (MATCHING ATOMJS IMAGE 1)
+   LUMENCO SHELL: SIDEBAR + TOPBAR (NO STICKER EMOJIS, PURE SVG)
    ========================================================================== */
-function renderTopbar() {
+function navItem(screenId, label, iconName, count = null) {
+  const active = app.screen === screenId;
+  return `
+    <button type="button" class="nav-link ${active ? 'active' : ''} ${screenId === 'admin' ? 'admin-link' : ''}" data-action="navigate" data-screen="${screenId}">
+      ${icon(iconName)}
+      <span>${escapeHtml(label)}</span>
+      ${count !== null ? `<span style="margin-left:auto;font-size:11px;color:var(--muted)">${count}</span>` : ''}
+    </button>
+  `;
+}
+
+function renderShell(content) {
   const profile = app.state.profile;
   const isAdmin = profile.role === 'admin';
 
-  return `
-    <header class="atom-header">
-      <div style="display:flex;align-items:center;gap:20px;min-width:0">
-        <a class="atom-logo-group" href="#" data-action="navigate" data-screen="workspace">
-          <div class="atom-logo-icon">⚛</div>
-          <div class="atom-logo-text">atom<span>js</span></div>
+  appRoot.innerHTML = `
+    <div class="app-shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <a class="brand" href="#" data-action="navigate" data-screen="workspace">
+          <span class="brand-mark">L</span>
+          <span class="brand-word">LumenCo<small>Kod yoz. O‘sib bor.</small></span>
         </a>
-        
-        <nav class="atom-nav">
-          <button class="atom-nav-tab ${app.screen === 'lessons' ? 'active' : ''}" type="button" data-action="navigate" data-screen="lessons">
-            <span class="tab-icon">⚛</span> <span>atomlearn</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'compiler' ? 'active' : ''}" type="button" data-action="navigate" data-screen="compiler">
-            <span class="tab-icon">&gt;_</span> <span>Kompilyator</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'workspace' || app.screen === 'editor' ? 'active' : ''}" type="button" data-action="navigate" data-screen="workspace">
-            <span class="tab-icon">⊞</span> <span>Web</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'game' ? 'active' : ''}" type="button" data-action="navigate" data-screen="game">
-            <span class="tab-icon">🎮</span> <span>O‘ynash</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'typing' ? 'active' : ''}" type="button" data-action="navigate" data-screen="typing">
-            <span class="tab-icon">⌨️</span> <span>Tez yozish</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'leaderboard' ? 'active' : ''}" type="button" data-action="navigate" data-screen="leaderboard">
-            <span class="tab-icon">👑</span> <span>Reyting</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'shop' ? 'active' : ''}" type="button" data-action="navigate" data-screen="shop">
-            <span class="tab-icon">🛍️</span> <span>atomshop</span>
-          </button>
-          <button class="atom-nav-tab ${app.screen === 'plans' ? 'active' : ''}" type="button" data-action="navigate" data-screen="plans">
-            <span class="tab-icon">💎</span> <span>Tariflar</span>
-          </button>
-          ${isAdmin ? `
-            <button class="atom-nav-tab ${app.screen === 'admin' ? 'active' : ''}" type="button" data-action="navigate" data-screen="admin" style="color:#ef4444;border-color:rgba(239,68,68,0.3)">
-              <span class="tab-icon">🛡️</span> <span>Admin</span>
-            </button>
-          ` : ''}
+
+        <p class="side-label">ISH MAYDONI</p>
+        <nav class="nav-list">
+          ${navItem('workspace', 'Ish maydoni', 'home', app.state.projects?.length || 0)}
+          ${navItem('editor', 'Kod muharriri', 'code')}
+          ${navItem('compiler', 'Kompilyator', 'zap')}
+          ${navItem('lessons', 'Darslar', 'book', app.state.lessons?.length || 350)}
         </nav>
-      </div>
 
-      <div class="atom-top-actions">
-        <button class="atom-pill-btn" type="button" data-action="toggle-fullscreen" title="To‘liq ekran">
-          ${icon('fullscreen')}
-        </button>
+        <p class="side-label">AMALIYOT &amp; O‘YIN</p>
+        <nav class="nav-list">
+          ${navItem('typing', 'Tez yozish', 'keyboard')}
+          ${navItem('leaderboard', 'Reyting', 'crown')}
+        </nav>
 
-        <select class="atom-pill-btn" style="cursor:pointer;padding-right:24px" data-locale-picker>
-          <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>⚙️ Ózb</option>
-          <option value="en" ${app.locale === 'en' ? 'selected' : ''}>⚙️ EN</option>
-          <option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>⚙️ RU</option>
-        </select>
+        <p class="side-label">HAMJAMIYAT &amp; TA’RIF</p>
+        <nav class="nav-list">
+          ${navItem('shop', 'Bezaklar do‘koni', 'shop')}
+          ${navItem('plans', 'Ta’riflar (Plans)', 'gem')}
+          ${isAdmin ? navItem('admin', 'Admin Panel', 'shield') : ''}
+          ${navItem('profile', 'Profil', 'user')}
+        </nav>
 
-        <button class="atom-pill-btn atom-streak-pill" type="button" data-action="navigate" data-screen="profile" title="Kundalik faollik (Streak)">
-          🔥 ${app.state.streak || 1}
-        </button>
+        <div class="sidebar-spacer"></div>
 
-        <button class="atom-pill-btn atom-coin-pill" type="button" data-action="navigate" data-screen="shop">
-          🪙 ${formatNumber(app.state.coins)}
-        </button>
-
-        <button class="atom-profile-pill" type="button" data-action="navigate" data-screen="profile">
-          <div class="avatar-mini">MU</div>
-          <div class="profile-texts">
+        <div class="sidebar-footer">
+          <div class="avatar ${profile.frameItem || ''}">MU</div>
+          <div class="profile-snippet">
             <strong>${escapeHtml(profile.name)}</strong>
-            <small>@${escapeHtml(profile.username)}</small>
+            <span>@${escapeHtml(profile.username)}</span>
           </div>
-        </button>
+          <button type="button" class="btn-secondary" style="width:28px;height:28px;padding:0;border-radius:8px" data-action="navigate" data-screen="profile" title="Profil">
+            ${icon('pencil')}
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Panel -->
+      <section class="main-panel">
+        <header class="topbar">
+          <div class="crumbs">
+            <span>LumenCo</span>
+            ${icon('chevron')}
+            <strong>${escapeHtml(app.screen.toUpperCase())}</strong>
+          </div>
+
+          <div class="topbar-right">
+            <button class="pill-badge streak" type="button" data-action="navigate" data-screen="profile" title="Kundalik faollik">
+              ${icon('flame')} ${app.state.streak || 1}
+            </button>
+
+            <button class="pill-badge coin" type="button" data-action="navigate" data-screen="shop">
+              <span class="coin-symbol">L</span>
+              ${formatNumber(app.state.coins)} coin
+            </button>
+
+            <select class="locale-picker" data-locale-picker>
+              <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option>
+              <option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option>
+              <option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option>
+            </select>
+
+            <button class="pill-badge" type="button" data-action="toggle-fullscreen" title="To‘liq ekran">
+              ${icon('fullscreen')}
+            </button>
+          </div>
+        </header>
+
+        <main class="content">${content}</main>
+      </section>
+    </div>
+    ${renderPetWidget()}
+  `;
+
+  renderModal();
+
+  if (window.LumenI18n) {
+    appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
+  }
+}
+
+/* ==========================================================================
+   DUOLINGO-STYLE AI PET ("LUMI" VECTOR ROBOT - NO EMOJIS)
+   ========================================================================== */
+function renderPetWidget() {
+  const profile = app.state?.profile;
+  const pet = profile?.petConfig || { name: 'Lumi', color: 'cyan' };
+  const phrase = app.petPhrases[app.petBubbleIndex % app.petPhrases.length];
+
+  return `
+    <div class="lumi-box" id="lumi-container">
+      <div class="lumi-speech" data-action="pet-talk">
+        <strong style="color:var(--cyan);display:block;margin-bottom:2px">${escapeHtml(pet.name)} (LumenCo AI):</strong>
+        <span>${escapeHtml(phrase)}</span>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button style="color:var(--cyan);font-size:10px;font-weight:700" type="button" data-action="pet-talk">Maslahat ➔</button>
+          ${profile?.plan === 'max' || profile?.role === 'admin' ? `
+            <button style="color:var(--orange);font-size:10px;font-weight:700" type="button" data-action="open-pet-wardrobe">Garderob</button>
+          ` : ''}
+        </div>
       </div>
-    </header>
+      <div class="lumi-svg-wrap" data-action="pet-talk" title="${escapeHtml(pet.name)}">
+        <!-- Pure Vector Robot SVG -->
+        <svg viewBox="0 0 36 36" width="34" height="34" fill="none">
+          <rect x="7" y="10" width="22" height="18" rx="7" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="13" cy="19" r="2.5" fill="#38bdf8"/>
+          <circle cx="23" cy="19" r="2.5" fill="#38bdf8"/>
+          <line x1="18" y1="4" x2="18" y2="10" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="18" cy="3" r="2" fill="#f97316"/>
+          <path d="M14 24 Q18 27 22 24" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
   `;
 }
 
 /* ==========================================================================
-   DUOLINGO-STYLE AI PET ("LUMI")
+   SCREEN: WORKSPACE (LOYIHALAR & MAKETLAR)
    ========================================================================== */
-function renderPetWidget() {
-  const profile = app.state?.profile;
-  const pet = profile?.petConfig || { name: 'Lumi', hat: 'crown', glasses: 'vr', color: 'cyan' };
-  const currentPhrase = app.petPhrases[app.petBubbleIndex % app.petPhrases.length];
-
-  const hatSvg = pet.hat === 'crown' ? '👑' : pet.hat === 'wizard' ? '🧙' : pet.hat === 'beanie' ? '🧢' : '';
-  const glassesSvg = pet.glasses === 'vr' ? '🥽' : pet.glasses === 'sunglasses' ? '🕶️' : pet.glasses === 'neon' ? '👓' : '';
-  const colorBg = pet.color === 'lime' ? 'linear-gradient(135deg, #10b981, #047857)' :
-                  pet.color === 'gold' ? 'linear-gradient(135deg, #f59e0b, #b45309)' :
-                  pet.color === 'purple' ? 'linear-gradient(135deg, #a855f7, #7e22ce)' :
-                  'linear-gradient(135deg, #0284c7, #0369a1)';
+function renderWorkspace() {
+  const project = getProject();
+  const projects = app.state.projects || [];
+  const completed = app.state.completedLessons?.length || 0;
 
   return `
-    <div class="lumi-widget" id="lumi-container">
-      <div class="lumi-bubble" data-action="pet-talk">
-        <strong style="color:var(--cyan);display:block;margin-bottom:2px">${escapeHtml(pet.name)} (AI Ustoz):</strong>
-        <span>${escapeHtml(currentPhrase)}</span>
-        <div style="margin-top:6px;display:flex;gap:6px">
-          <button style="color:var(--cyan);font-size:10px;font-weight:700" type="button" data-action="pet-talk">Keyingisi 💬</button>
-          ${profile?.plan === 'max' || profile?.role === 'admin' ? `
-            <button style="color:var(--orange);font-size:10px;font-weight:700" type="button" data-action="open-pet-wardrobe">Garderob 👒</button>
-          ` : ''}
+    <div>
+      <div class="page-heading">
+        <div>
+          <h1>Loyiha Ish Maydoni</h1>
+          <p>Yangi g‘oyalaringizni kodlang, fayllarni tartiblang va o‘sib boring.</p>
+        </div>
+        <button class="btn" type="button" data-action="new-project">
+          ${icon('plus')} <span>Yangi loyiha</span>
+        </button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-icon">${icon('layers')}</span>
+          <div><span>Loyihalar</span><strong>${projects.length}</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon lime">${icon('award')}</span>
+          <div><span>Creator darajasi</span><strong>${escapeHtml(app.state.creatorRank.name)}</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon purple">${icon('code')}</span>
+          <div><span>Developer darajasi</span><strong>${escapeHtml(app.state.developerRank.name)}</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon orange">${icon('bolt')}</span>
+          <div><span>To‘plangan XP</span><strong>${formatNumber(app.state.xp)}</strong></div>
         </div>
       </div>
-      <div class="lumi-pet-avatar" style="background:${colorBg}" data-action="pet-talk" title="${escapeHtml(pet.name)} ustoz">
-        <div style="position:relative;display:grid;place-items:center;font-size:24px">
-          ${hatSvg ? `<span style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:18px">${hatSvg}</span>` : ''}
-          ${glassesSvg ? `<span style="position:absolute;top:-2px;left:50%;transform:translateX(-50%);font-size:16px">${glassesSvg}</span>` : ''}
-          <span>🤖</span>
+
+      <div style="display:grid;grid-template-columns:minmax(0, 1.4fr) minmax(320px, 0.8fr);gap:20px">
+        <div>
+          <div class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Faol loyiha ko‘rinishi</h2>
+                <p>${project ? `${escapeHtml(project.name)} · ${Object.keys(project.files || {}).length} ta fayl` : 'Loyiha tanlanmagan'}</p>
+              </div>
+              <button class="btn btn-secondary" type="button" data-action="navigate" data-screen="editor">
+                ${icon('code')} Muharrirda ochish
+              </button>
+            </div>
+            ${project ? `
+              <div style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#ffffff">
+                <iframe style="width:100%;height:100%;border:0" sandbox="" srcdoc="${escapeHtml(project.files['index.html'] || '<h2 style=\'color:#333;font-family:sans-serif;padding:20px\'>Loyiha boshlandi</h2>')}"></iframe>
+              </div>
+            ` : `<p style="color:var(--muted)">Hali loyiha yaratilmagan.</p>`}
+          </div>
+
+          <div class="panel" style="margin-top:20px">
+            <div class="panel-heading">
+              <div><h2>Barcha loyihalar</h2><p>G‘oyangizdan qurilgan veb-sahifalar.</p></div>
+            </div>
+            <div style="display:grid;gap:8px">
+              ${projects.map((p) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="color:var(--cyan)">${icon('folder')}</span>
+                    <div>
+                      <strong style="color:#ffffff">${escapeHtml(p.name)}</strong>
+                      <small style="color:var(--muted);display:block">${escapeHtml(p.template)} · ${Object.keys(p.files || {}).length} fayl</small>
+                    </div>
+                  </div>
+                  <button class="btn btn-secondary" style="height:32px;padding:0 12px;font-size:11px" type="button" data-action="open-project" data-project-id="${escapeHtml(p.id)}">
+                    Tanlash
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <aside style="display:flex;flex-direction:column;gap:20px">
+          <div class="panel">
+            <div class="panel-heading">
+              <div><h2>Keyingi qadam</h2><p>Darslar orqali ko‘nikmalaringizni charxlang.</p></div>
+            </div>
+            <p style="color:var(--muted-light);font-size:13px">Hozirgacha <strong>${completed} ta dars</strong> yakunlandi.</p>
+            <button class="btn" style="width:100%;margin-top:10px" type="button" data-action="navigate" data-screen="lessons">
+              ${icon('book')} Darslarni davom ettirish
+            </button>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading">
+              <div><h2>Tez Yozish Mashg‘uloti</h2><p>Barmoqlaringiz tezligini sinang.</p></div>
+            </div>
+            <p style="color:var(--muted-light);font-size:13px">WPM tezlik ko‘rsatkichini oshirib, coin to‘plang.</p>
+            <button class="btn btn-secondary" style="width:100%;margin-top:10px" type="button" data-action="navigate" data-screen="typing">
+              ${icon('keyboard')} Tez yozishni boshlash
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   SCREEN: KOD MUHARRIRI (FULL EDITOR)
+   ========================================================================== */
+function renderEditorScreen() {
+  const project = getProject();
+  if (!project) return `<div class="panel">Loyihalar topilmadi. Avval yangi loyiha yarating.</div>`;
+
+  const files = Object.keys(project.files || {});
+  if (!app.filePath || !files.includes(app.filePath)) app.filePath = files[0] || null;
+  const currentFile = getSelectedFile();
+
+  return `
+    <div>
+      <div class="page-heading">
+        <div>
+          <h1>Kod Muharriri: ${escapeHtml(project.name)}</h1>
+          <p>Fayllarni boshqaring, kod yozing va saqlang.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" type="button" data-action="new-file">${icon('plus')} Yangi fayl</button>
+          <button class="btn" type="button" data-action="save-active-file">${icon('save')} Saqlash</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:260px 1fr 1fr;gap:16px;height:calc(100vh - 180px)">
+        <!-- File Tree -->
+        <div class="panel" style="overflow-y:auto;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Loyiha fayllari</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            ${files.map((path) => `
+              <button type="button" class="nav-link ${path === app.filePath ? 'active' : ''}" style="height:34px;font-size:12px" data-action="select-file" data-path="${escapeHtml(path)}">
+                ${icon('file')}
+                <span>${escapeHtml(path)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="panel" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+          <div style="padding:10px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;color:var(--muted-light)">
+            <span>${escapeHtml(app.filePath || 'Fayl tanlanmagan')}</span>
+            <span style="color:var(--cyan)">UTF-8</span>
+          </div>
+          <textarea id="project-code-input" class="compiler-input-area" spellcheck="false">${escapeHtml(currentFile?.content || '')}</textarea>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="panel" style="padding:0;overflow:hidden;display:flex;flex-direction:column;background:#ffffff">
+          <div style="padding:10px 16px;background:#0c101a;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)">
+            Jonli natija ko‘rinishi
+          </div>
+          <iframe style="flex:1;border:0;width:100%" sandbox="" srcdoc="${escapeHtml(project.files['index.html'] || '')}"></iframe>
         </div>
       </div>
     </div>
@@ -288,60 +475,51 @@ function renderPetWidget() {
    SCREEN: KOMPILYATOR (BROWSER CODE LABORATORY)
    ========================================================================== */
 function renderCompiler() {
-  const currentTheme = app.state.profile.themeItem || 'theme-dracula';
-
   return `
-    <div class="compiler-page">
-      <div class="compiler-toolbar">
-        <div class="compiler-tool-actions">
-          <button class="atom-btn atom-btn-primary" type="button" data-action="run-compiler">
+    <div class="compiler-layout">
+      <div class="compiler-bar">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn" type="button" data-action="run-compiler">
             ${icon('play')} <span>Ishga tushirish</span>
           </button>
-          <button class="atom-btn atom-btn-secondary" type="button" data-action="reset-compiler">
+          <button class="btn btn-secondary" type="button" data-action="reset-compiler">
             <span>Tozalash</span>
           </button>
-          <button class="atom-btn atom-btn-secondary" type="button" data-action="save-compiler-to-project">
+          <button class="btn btn-secondary" type="button" data-action="save-compiler-to-project">
             ${icon('save')} <span>Loyiha sifatida saqlash</span>
           </button>
         </div>
 
-        <div class="compiler-tabs">
-          <button class="compiler-tab ${app.compilerTab === 'html' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="html">HTML</button>
-          <button class="compiler-tab ${app.compilerTab === 'css' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="css">CSS</button>
-          <button class="compiler-tab ${app.compilerTab === 'js' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="js">JS</button>
-          <button class="compiler-tab ${app.compilerTab === 'console' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="console">Konsol</button>
+        <div style="display:flex;gap:6px">
+          <button class="filter-tab-btn ${app.compilerTab === 'html' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="html">HTML</button>
+          <button class="filter-tab-btn ${app.compilerTab === 'css' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="css">CSS</button>
+          <button class="filter-tab-btn ${app.compilerTab === 'js' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="js">JavaScript</button>
+          <button class="filter-tab-btn ${app.compilerTab === 'console' ? 'active' : ''}" type="button" data-action="compiler-tab" data-tab="console">Konsol</button>
         </div>
 
-        <div style="display:flex;gap:10px;align-items:center">
-          <label style="font-size:12px;color:var(--muted-light)">Shablon:</label>
-          <select class="atom-pill-btn" data-action="compiler-load-template" style="cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--muted)">Shablon:</span>
+          <select class="pill-badge" data-action="compiler-load-template" style="cursor:pointer">
             <option value="hello">Salom Dunyo</option>
             <option value="clock">Raqamli Soat</option>
             <option value="ball">Animatsiyali Koptok</option>
-            <option value="todo">Todo Dasturi</option>
           </select>
         </div>
       </div>
 
-      <div class="compiler-workspace">
-        <div class="compiler-editor-pane">
-          <div style="padding:8px 16px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
-            <span>${app.compilerTab.toUpperCase()} MUHARRIRI</span>
-            <span>Mavzu: ${escapeHtml(currentTheme)}</span>
+      <div class="compiler-grid">
+        <div class="panel" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+          <div style="padding:8px 16px;background:var(--bg-card);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);text-transform:uppercase">
+            ${app.compilerTab} kodi
           </div>
-          <textarea id="compiler-input" class="compiler-code-input" spellcheck="false" data-role="compiler-input">${escapeHtml(app.compilerTab === 'html' ? app.compilerHtml : app.compilerTab === 'css' ? app.compilerCss : app.compilerTab === 'js' ? app.compilerJs : app.compilerConsole.join('\n'))}</textarea>
+          <textarea id="compiler-input" class="compiler-input-area" spellcheck="false">${escapeHtml(app.compilerTab === 'html' ? app.compilerHtml : app.compilerTab === 'css' ? app.compilerCss : app.compilerTab === 'js' ? app.compilerJs : app.compilerConsole.join('\n'))}</textarea>
         </div>
 
-        <div class="compiler-preview-pane">
-          <div style="padding:8px 16px;background:#0f172a;border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
-            <span>NATIJA KO‘RINISHI (SANDBOX)</span>
-            <span style="color:var(--lime)">● Jonli natija</span>
+        <div class="panel" style="padding:0;overflow:hidden;display:flex;flex-direction:column;background:#ffffff">
+          <div style="padding:8px 16px;background:#0c101a;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted)">
+            Jonli natija (Sandbox)
           </div>
-          <iframe id="compiler-preview-frame" class="compiler-iframe" sandbox="allow-scripts" title="Natija"></iframe>
-          <div class="compiler-console-box">
-            <div style="font-weight:700;margin-bottom:4px;color:var(--cyan)">KONSOL JURNALI:</div>
-            ${app.compilerConsole.map((line) => `<div class="console-line info">&gt; ${escapeHtml(line)}</div>`).join('')}
-          </div>
+          <iframe id="compiler-preview-frame" style="flex:1;border:0;width:100%" sandbox="allow-scripts" title="Natija"></iframe>
         </div>
       </div>
     </div>
@@ -351,7 +529,6 @@ function renderCompiler() {
 function runCompilerCode() {
   const frame = document.getElementById('compiler-preview-frame');
   if (!frame) return;
-
   const html = app.compilerHtml;
   const css = `<style>${app.compilerCss}</style>`;
   const js = `
@@ -361,26 +538,20 @@ function runCompilerCode() {
         _origLog.apply(console, args);
         window.parent.postMessage({ type: 'compiler-console', text: args.join(' ') }, '*');
       };
-      window.onerror = function(msg) {
-        window.parent.postMessage({ type: 'compiler-console', text: 'Xato: ' + msg }, '*');
-      };
       ${app.compilerJs}
     <\/script>
   `;
-
   frame.srcdoc = `${css}\n${html}\n${js}`;
-  app.compilerConsole.push(`[${new Date().toLocaleTimeString()}] Kod ishga tushirildi.`);
 }
 
 /* ==========================================================================
-   SCREEN: SPEED TYPING GAME (TEZ YOZISH & O'YNASH)
+   SCREEN: TEZ YOZISH (SPEED TYPING)
    ========================================================================== */
 const TYPING_SNIPPETS = [
   'const developer = { name: "Muhammadbek", skill: "Fullstack", focus: "AI" };',
   'function buildFuture(ideas, grit) { return ideas.map(idea => create(idea)); }',
   'document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", run));',
-  'const fibonacci = (n) => n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);',
-  'import { createClient } from "@supabase/supabase-js"; const db = createClient();'
+  'const fibonacci = (n) => n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);'
 ];
 
 function initTypingGame() {
@@ -395,90 +566,45 @@ function initTypingGame() {
   if (app.typingTimer) clearInterval(app.typingTimer);
 }
 
-function startTypingTimer() {
-  if (app.typingStartTime) return;
-  app.typingStartTime = Date.now();
-  app.typingTimer = setInterval(() => {
-    app.typingTimeLeft -= 1;
-    if (app.typingTimeLeft <= 0) {
-      clearInterval(app.typingTimer);
-      finishTypingGame();
-    } else {
-      updateTypingStats();
-      const timeBox = document.getElementById('typing-time');
-      if (timeBox) timeBox.textContent = `${app.typingTimeLeft}s`;
-    }
-  }, 1000);
-}
-
-function updateTypingStats() {
-  const seconds = Math.max(1, (Date.now() - (app.typingStartTime || Date.now())) / 1000);
-  const words = app.typingIndex / 5;
-  app.typingWpm = Math.round((words / seconds) * 60);
-  const total = app.typingIndex + app.typingMistakes;
-  app.typingAcc = total > 0 ? Math.round((app.typingIndex / total) * 100) : 100;
-
-  const wpmEl = document.getElementById('typing-wpm');
-  const accEl = document.getElementById('typing-acc');
-  if (wpmEl) wpmEl.textContent = `${app.typingWpm}`;
-  if (accEl) accEl.textContent = `${app.typingAcc}%`;
-}
-
-async function finishTypingGame() {
-  app.typingFinished = true;
-  if (app.typingTimer) clearInterval(app.typingTimer);
-  updateTypingStats();
-  try {
-    app.state = await request('/api/game/record', {
-      method: 'POST',
-      body: JSON.stringify({ wpm: app.typingWpm, accuracy: app.typingAcc })
-    });
-    toast(`G‘alaba! +50 XP va +30 Coin hisobingizga qo‘shildi!`);
-  } catch (err) {
-    toast(err.message, 'error');
-  }
-  render();
-}
-
 function renderTypingGame() {
   return `
-    <div class="typing-arena">
-      <div class="page-title-bar" style="text-align:center">
-        <h1>⌨️ Tez Yozish Arena</h1>
-        <p>Haqiqiy JavaScript kodlarini tez va xatosiz yozib, reytingingizni oshiring!</p>
+    <div class="typing-wrap">
+      <div class="page-heading" style="text-align:center;display:block">
+        <h1>Tez Yozish Mashg‘uloti</h1>
+        <p>Haqiqiy kod sintaksisini tez va xatosiz yozib, tezlik (WPM) ko‘rsatkichini oshiring.</p>
       </div>
 
       <div class="typing-hud">
-        <div class="hud-box wpm">
+        <div class="typing-hud-card">
           <span>Tezlik</span>
-          <strong id="typing-wpm">${app.typingWpm}</strong>
+          <strong style="color:var(--cyan)" id="typing-wpm">${app.typingWpm}</strong>
           <small style="color:var(--muted)">WPM</small>
         </div>
-        <div class="hud-box acc">
+        <div class="typing-hud-card">
           <span>Aniqlik</span>
-          <strong id="typing-acc">${app.typingAcc}%</strong>
+          <strong style="color:var(--lime)" id="typing-acc">${app.typingAcc}%</strong>
         </div>
-        <div class="hud-box time">
+        <div class="typing-hud-card">
           <span>Qolgan vaqt</span>
-          <strong id="typing-time">${app.typingTimeLeft}s</strong>
+          <strong style="color:var(--orange)" id="typing-time">${app.typingTimeLeft}s</strong>
         </div>
-        <div class="hud-box">
+        <div class="typing-hud-card">
           <span>Xatolar</span>
-          <strong style="color:var(--danger)" id="typing-mistakes">${app.typingMistakes}</strong>
+          <strong style="color:var(--danger)">${app.typingMistakes}</strong>
         </div>
       </div>
 
       ${app.typingFinished ? `
-        <div class="atom-panel" style="text-align:center;padding:40px;margin-bottom:24px">
-          <div style="font-size:54px;margin-bottom:12px">🏆</div>
+        <div class="panel" style="text-align:center;padding:40px">
+          <span style="color:var(--gold)">${icon('award')}</span>
           <h2>Ajoyib natija!</h2>
           <p style="color:var(--muted-light)">Tezligingiz: <strong>${app.typingWpm} WPM</strong> | Aniqlik: <strong>${app.typingAcc}%</strong></p>
-          <div style="margin:20px 0;color:var(--lime);font-weight:700">+50 XP va +30 Coin berildi!</div>
-          <button class="atom-btn atom-btn-primary" type="button" data-action="restart-typing">Yana o‘ynash 🔄</button>
+          <div style="margin:20px 0;color:var(--lime);font-weight:700">+50 XP va +30 Coin hisobingizga qo‘shildi!</div>
+          <button class="btn" type="button" data-action="restart-typing">Qayta sinash</button>
         </div>
       ` : `
-        <div class="typing-terminal" id="typing-arena-box" tabindex="0">
-          <input type="text" id="typing-hidden-input" class="typing-hidden-input" autocomplete="off" autofocus />
+        <div class="typing-terminal" tabindex="0">
+          <input type="text" id="typing-hidden-input" style="position:absolute;top:0;left:0;opacity:0;width:100%;height:100%;cursor:default" autocomplete="off" autofocus />
           <div id="typing-display-text">
             ${app.typingText.split('').map((char, index) => {
               let cls = 'typing-char pending';
@@ -488,154 +614,21 @@ function renderTypingGame() {
             }).join('')}
           </div>
         </div>
-        <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:14px">Klaviaturadan to‘g‘ridan-to‘g‘ri kodni yozing. Bo‘sh joy uchun probel bosing.</p>
+        <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:14px">Klaviaturadan to‘g‘ridan-to‘g‘ri kodni yozing.</p>
       `}
     </div>
   `;
 }
 
-function renderGameHub() {
-  return `
-    <div style="max-width:1000px;margin:0 auto">
-      <div class="page-title-bar">
-        <h1>🎮 O‘yinlar & Kod Mashg‘ulotlari</h1>
-        <p>Qiziqarli o‘yinlar orqali dasturlash ko‘nikmalaringizni charxlang va coin to‘plang.</p>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-top:24px">
-        <div class="atom-panel" style="display:flex;flex-direction:column;justify-content:space-between">
-          <div>
-            <div style="font-size:36px;margin-bottom:14px">⌨️</div>
-            <h3>Tez Yozish Musobaqasi</h3>
-            <p style="color:var(--muted-light);font-size:13px;line-height:1.5">Kod yozish tezligingizni (WPM) sinab ko‘ring va har bir g‘alaba uchun coin oling.</p>
-          </div>
-          <button class="atom-btn atom-btn-orange" style="margin-top:20px" type="button" data-action="navigate" data-screen="typing">Boshlash ▶</button>
-        </div>
-
-        <div class="atom-panel" style="display:flex;flex-direction:column;justify-content:space-between">
-          <div>
-            <div style="font-size:36px;margin-bottom:14px">🔬</div>
-            <h3>Brauzer Kompilyatori</h3>
-            <p style="color:var(--muted-light);font-size:13px;line-height:1.5">Jonli HTML, CSS va JS laboratoriyasida ijod qiling va shablonlar yarating.</p>
-          </div>
-          <button class="atom-btn atom-btn-primary" style="margin-top:20px" type="button" data-action="navigate" data-screen="compiler">Laboratoriyani ochish 🚀</button>
-        </div>
-
-        <div class="atom-panel" style="display:flex;flex-direction:column;justify-content:space-between">
-          <div>
-            <div style="font-size:36px;margin-bottom:14px">💎</div>
-            <h3>Obunalar & Mukofotlar</h3>
-            <p style="color:var(--muted-light);font-size:13px;line-height:1.5">Pro va Max tariflari orqali 2x-3x coin bonuslari va AI ustozi Lumi yordamini oling.</p>
-          </div>
-          <button class="atom-btn atom-btn-secondary" style="margin-top:20px" type="button" data-action="navigate" data-screen="plans">Tariflarni ko‘rish 💎</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 /* ==========================================================================
-   SCREEN: ATOMSHOP (DO'KON) WITH LIVE RIGHT STICKY PREVIEW
-   ========================================================================== */
-function renderShop() {
-  const profile = app.state.profile;
-  const items = app.state.shopItems || [];
-  const filtered = items.filter((it) => it.kind === app.shopFilter);
-
-  // Live preview priority: hovered item -> equipped item
-  const activeFrame = app.hoveredShopItem?.kind === 'frame' ? app.hoveredShopItem.id : (profile.frameItem || 'frame-yalpiz');
-  const activeBg = app.hoveredShopItem?.kind === 'bg' ? app.hoveredShopItem.id : (profile.bgItem || 'bg-yalpiz');
-
-  return `
-    <div class="shop-container">
-      <div>
-        <div class="page-title-bar">
-          <h1>${escapeHtml(app.shopFilter === 'frame' ? 'Animatsiyali ramkalar' : app.shopFilter === 'bg' ? 'Fonlar' : app.shopFilter === 'theme' ? 'Muharrir temalari' : 'Avatarlar & Pet')}</h1>
-          <p>Qatoringiz atrofida aylanib turadi — o‘yin va tez yozish reytingida, podiumda va lobbyda.</p>
-        </div>
-
-        <div class="shop-tabs-bar">
-          <button class="shop-tab-btn ${app.shopFilter === 'frame' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="frame">Animatsiyali ramkalar</button>
-          <button class="shop-tab-btn ${app.shopFilter === 'bg' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="bg">Fonlar</button>
-          <button class="shop-tab-btn ${app.shopFilter === 'theme' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="theme">Muharrir temalari</button>
-          <button class="shop-tab-btn ${app.shopFilter === 'avatar' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="avatar">Avatarlar</button>
-          <button class="shop-tab-btn ${app.shopFilter === 'pet' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="pet">Pet buyumlari</button>
-        </div>
-
-        <div class="shop-items-grid">
-          ${filtered.map((item) => {
-            const owned = app.state.inventory?.includes(item.id);
-            const isEquipped = profile.frameItem === item.id || profile.bgItem === item.id || profile.themeItem === item.id;
-
-            return `
-              <div class="shop-item-card ${isEquipped ? 'is-equipped' : ''}" data-action="hover-shop-item" data-item-id="${escapeHtml(item.id)}">
-                <div class="shop-card-preview ${item.kind === 'bg' ? item.id : ''}">
-                  ${item.isRare ? `<span class="rare-badge">+ NOYOB</span>` : ''}
-                  <div class="preview-row-pill ${item.kind === 'frame' ? item.id : ''}">
-                    <span>1 Ism</span>
-                    <span style="color:var(--muted)">9 480</span>
-                  </div>
-                </div>
-                <div class="shop-item-name">${escapeHtml(item.name)}</div>
-                <div class="shop-item-desc">${escapeHtml(item.description)}</div>
-
-                ${isEquipped ? `
-                  <button class="shop-item-action equipped" type="button" data-action="equip-item" data-item-id="${escapeHtml(item.id)}">
-                    ${icon('check')} Taqilgan
-                  </button>
-                ` : owned ? `
-                  <button class="shop-item-action owned" type="button" data-action="equip-item" data-item-id="${escapeHtml(item.id)}">
-                    Taqish
-                  </button>
-                ` : `
-                  <button class="shop-item-action" type="button" data-action="buy-item" data-item-id="${escapeHtml(item.id)}">
-                    🪙 ${formatNumber(item.price)}
-                  </button>
-                `}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Right Sticky Live Preview matching Atomjs screenshot 2 & 3 -->
-      <aside class="shop-sticky-preview">
-        <div class="preview-kicker">PROFILINGIZ</div>
-        <div class="preview-profile-card ${activeBg} ${activeFrame}">
-          <div class="preview-profile-avatar">MU</div>
-          <div class="preview-profile-details">
-            <strong>${escapeHtml(profile.name)}</strong>
-            <small>@${escapeHtml(profile.username)}</small>
-          </div>
-        </div>
-
-        <div class="preview-kicker">REYTİNGDA</div>
-        <div class="preview-leaderboard-row ${activeBg} ${activeFrame}">
-          <div style="display:flex;align-items:center">
-            <span class="preview-rank-badge">1</span>
-            <span>${escapeHtml(profile.name)}</span>
-          </div>
-          <strong style="color:#ffffff">${formatNumber(app.state.codeScore || 9480)}</strong>
-        </div>
-
-        <p class="preview-hint-text">
-          Buyum ustiga olib boring (telefonda — rasmini bosing): profilingizda qanday ko‘rinishini shu yerda ko‘rasiz.
-        </p>
-      </aside>
-    </div>
-  `;
-}
-
-/* ==========================================================================
-   SCREEN: LEADERBOARD (REYTING) PODIUM & RANKING
+   SCREEN: REYTING (LEADERBOARD PODIUM & TABLE)
    ========================================================================== */
 function renderLeaderboard() {
   const users = app.state.adminUsers?.length ? app.state.adminUsers : [
     { name: 'Muhammadbek Rafiqov', username: 'kembodev', xp: 9480, streak: 12, frame: 'frame-noyob', bg: 'bg-laboratoriya' },
     { name: 'Jasurbek Developer', username: 'jasur_js', xp: 8120, streak: 7, frame: 'frame-olov', bg: 'bg-shom' },
     { name: 'Malika Frontend', username: 'malika_code', xp: 7450, streak: 5, frame: 'frame-shafaq', bg: 'bg-konfet' },
-    { name: 'Bekzod Backend', username: 'bekzod_node', xp: 4320, streak: 3, frame: 'frame-okean', bg: 'bg-okean' },
-    { name: 'Aziza AI Engineer', username: 'aziza_ai', xp: 6890, streak: 9, frame: 'frame-kiber', bg: 'bg-nuqtalar' }
+    { name: 'Bekzod Backend', username: 'bekzod_node', xp: 4320, streak: 3, frame: 'frame-okean', bg: 'bg-okean' }
   ];
 
   const sorted = [...users].sort((a, b) => (b.xp || 0) - (a.xp || 0));
@@ -644,148 +637,238 @@ function renderLeaderboard() {
   const top3 = sorted[2];
 
   return `
-    <div style="max-width:1000px;margin:0 auto">
-      <div class="page-title-bar" style="text-align:center">
-        <h1>👑 Dasturchilar Reytingi</h1>
-        <p>LumenCo platformasidagi eng faol kod ijodkorlari va haftalik peshqadamlar.</p>
+    <div style="max-width:960px;margin:0 auto">
+      <div class="page-heading" style="text-align:center;display:block">
+        <h1>Dasturchilar Reytingi</h1>
+        <p>LumenCo platformasidagi eng faol dasturchilar va peshqadamlar.</p>
       </div>
 
-      <!-- Top 3 Podium matching atomjs -->
-      <div class="podium-container">
-        <!-- 2nd Place -->
-        <div class="podium-slot second">
-          <div class="podium-avatar-wrap">
-            <div class="preview-profile-avatar ${top2?.frame || ''}" style="width:64px;height:64px">🥈</div>
-          </div>
-          <strong style="margin-bottom:2px;font-size:13px">${escapeHtml(top2?.name || 'Jasurbek')}</strong>
+      <!-- Podium -->
+      <div class="podium-wrap">
+        <div class="podium-col second">
+          <div class="avatar ${top2?.frame || ''}" style="width:58px;height:58px;margin-bottom:8px">2</div>
+          <strong style="font-size:13px">${escapeHtml(top2?.name || 'Jasurbek')}</strong>
           <span style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top2?.xp || 8120)} XP</span>
           <div class="podium-pedestal">2-O‘rin</div>
         </div>
 
-        <!-- 1st Place (Gold with crown) -->
-        <div class="podium-slot first">
-          <div class="podium-avatar-wrap">
-            <span class="podium-crown">👑</span>
-            <div class="preview-profile-avatar ${top1?.frame || 'frame-noyob'}" style="width:76px;height:76px">MU</div>
-          </div>
-          <strong style="margin-bottom:2px;font-size:14px;color:#facc15">${escapeHtml(top1?.name || 'Muhammadbek Rafiqov')}</strong>
+        <div class="podium-col first">
+          <span style="color:var(--gold);margin-bottom:4px">${icon('crown')}</span>
+          <div class="avatar ${top1?.frame || 'frame-noyob'}" style="width:72px;height:72px;margin-bottom:8px">MU</div>
+          <strong style="font-size:14px;color:#facc15">${escapeHtml(top1?.name || 'Muhammadbek Rafiqov')}</strong>
           <span style="color:var(--gold);font-weight:800;font-size:13px;margin-bottom:8px">${formatNumber(top1?.xp || 9480)} XP</span>
           <div class="podium-pedestal">1-O‘rin</div>
         </div>
 
-        <!-- 3rd Place -->
-        <div class="podium-slot third">
-          <div class="podium-avatar-wrap">
-            <div class="preview-profile-avatar ${top3?.frame || ''}" style="width:58px;height:58px">🥉</div>
-          </div>
-          <strong style="margin-bottom:2px;font-size:13px">${escapeHtml(top3?.name || 'Malika')}</strong>
+        <div class="podium-col third">
+          <div class="avatar ${top3?.frame || ''}" style="width:54px;height:54px;margin-bottom:8px">3</div>
+          <strong style="font-size:13px">${escapeHtml(top3?.name || 'Malika')}</strong>
           <span style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top3?.xp || 7450)} XP</span>
           <div class="podium-pedestal">3-O‘rin</div>
         </div>
       </div>
 
-      <!-- Table Ranking -->
-      <table class="leaderboard-table">
-        <tbody>
-          ${sorted.map((user, idx) => {
-            const isMe = user.username === app.state.profile.username || user.email === app.state.profile.email;
-            return `
-              <tr class="leaderboard-row ${isMe ? 'highlighted' : ''} ${user.bg || ''}">
-                <td class="leaderboard-cell" style="width:50px;font-weight:800;color:var(--cyan)">#${idx + 1}</td>
-                <td class="leaderboard-cell">
+      <!-- Table -->
+      <div class="panel" style="padding:0;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase">
+              <th style="padding:14px 18px;text-align:left"># O‘rin</th>
+              <th style="padding:14px 18px;text-align:left">Dasturchi</th>
+              <th style="padding:14px 18px;text-align:left">Streak</th>
+              <th style="padding:14px 18px;text-align:right">XP Balli</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((u, i) => `
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 18px;font-weight:800;color:var(--cyan)">#${i + 1}</td>
+                <td style="padding:14px 18px">
                   <div style="display:flex;align-items:center;gap:12px">
-                    <div class="avatar-mini ${user.frame || ''}">MU</div>
+                    <div class="avatar ${u.frame || ''}" style="width:34px;height:34px;font-size:12px">MU</div>
                     <div>
-                      <strong>${escapeHtml(user.name)}</strong>
-                      <small style="color:var(--muted-light);display:block">@${escapeHtml(user.username)}</small>
+                      <strong>${escapeHtml(u.name)}</strong>
+                      <small style="color:var(--muted);display:block">@${escapeHtml(u.username)}</small>
                     </div>
                   </div>
                 </td>
-                <td class="leaderboard-cell" style="color:var(--orange);font-weight:700">🔥 ${user.streak || 1}</td>
-                <td class="leaderboard-cell" style="text-align:right;font-weight:800;font-size:15px;color:#ffffff">
-                  ${formatNumber(user.xp || 0)} <span style="font-size:11px;color:var(--muted)">XP</span>
-                </td>
+                <td style="padding:14px 18px;color:var(--orange);font-weight:700">🔥 ${u.streak || 1}</td>
+                <td style="padding:14px 18px;text-align:right;font-weight:800;color:#ffffff">${formatNumber(u.xp || 0)} XP</td>
               </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
 
 /* ==========================================================================
-   SCREEN: SUBSCRIPTION PLANS ("TARIFLAR / PLANS")
+   SCREEN: BEZAKLAR DO‘KONI (SHOP WITH LIVE RIGHT PREVIEW)
+   ========================================================================== */
+function renderShop() {
+  const profile = app.state.profile;
+  const items = app.state.shopItems || [];
+  const filtered = items.filter((it) => it.kind === app.shopFilter);
+
+  const activeFrame = app.hoveredShopItem?.kind === 'frame' ? app.hoveredShopItem.id : (profile.frameItem || 'frame-yalpiz');
+  const activeBg = app.hoveredShopItem?.kind === 'bg' ? app.hoveredShopItem.id : (profile.bgItem || 'bg-yalpiz');
+
+  return `
+    <div class="shop-layout">
+      <div>
+        <div class="page-heading">
+          <div>
+            <h1>LumenCo Bezaklar Do‘koni</h1>
+            <p>Profilingiz va reyting qatoringizni animatsiyali ramkalar va fonlar bilan bezang.</p>
+          </div>
+        </div>
+
+        <div class="filter-tabs">
+          <button class="filter-tab-btn ${app.shopFilter === 'frame' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="frame">Animatsiyali ramkalar</button>
+          <button class="filter-tab-btn ${app.shopFilter === 'bg' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="bg">Fonlar</button>
+          <button class="filter-tab-btn ${app.shopFilter === 'theme' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="theme">Muharrir temalari</button>
+          <button class="filter-tab-btn ${app.shopFilter === 'avatar' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="avatar">Avatarlar</button>
+        </div>
+
+        <div class="shop-grid">
+          ${filtered.map((item) => {
+            const owned = app.state.inventory?.includes(item.id);
+            const isEquipped = profile.frameItem === item.id || profile.bgItem === item.id || profile.themeItem === item.id;
+
+            return `
+              <div class="shop-item-card" data-action="hover-shop-item" data-item-id="${escapeHtml(item.id)}">
+                <div class="shop-item-preview-box ${item.kind === 'bg' ? item.id : ''}">
+                  <div style="width:85%;height:36px;border-radius:8px;background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px" class="${item.kind === 'frame' ? item.id : ''}">
+                    <span>1 Ism</span>
+                    <span style="color:var(--muted)">9 480</span>
+                  </div>
+                </div>
+                <strong style="color:#ffffff;font-size:14px;margin-bottom:4px">${escapeHtml(item.name)}</strong>
+                <p style="color:var(--muted);font-size:11px;margin:0 0 12px;line-height:1.4;flex:1">${escapeHtml(item.description)}</p>
+
+                ${isEquipped ? `
+                  <button class="btn btn-secondary" style="width:100%;color:var(--lime);border-color:var(--lime)" disabled>
+                    ${icon('check')} Taqilgan
+                  </button>
+                ` : owned ? `
+                  <button class="btn btn-secondary" style="width:100%" type="button" data-action="equip-item" data-item-id="${escapeHtml(item.id)}">
+                    Taqish
+                  </button>
+                ` : `
+                  <button class="btn" style="width:100%" type="button" data-action="buy-item" data-item-id="${escapeHtml(item.id)}">
+                    🪙 ${formatNumber(item.price)} coin
+                  </button>
+                `}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Right Sticky Live Preview -->
+      <aside class="shop-sticky-card">
+        <div style="font-size:11px;font-weight:800;color:var(--orange);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px">
+          PROFILINGIZDA KO‘RINIShI
+        </div>
+        <div style="padding:16px;border-radius:12px;display:flex;align-items:center;gap:12px;margin-bottom:20px;border:1px solid var(--border)" class="${activeBg} ${activeFrame}">
+          <div class="avatar" style="width:48px;height:48px;font-size:18px">MU</div>
+          <div>
+            <strong style="display:block;color:#ffffff">${escapeHtml(profile.name)}</strong>
+            <small style="color:var(--muted-light)">@${escapeHtml(profile.username)}</small>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:800;color:var(--orange);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px">
+          REYTİNGDA KO‘RINIShI
+        </div>
+        <div style="height:44px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border:1px solid var(--border);margin-bottom:16px" class="${activeBg} ${activeFrame}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:800;color:var(--cyan)">#1</span>
+            <span>${escapeHtml(profile.name)}</span>
+          </div>
+          <strong>${formatNumber(app.state.codeScore || 9480)}</strong>
+        </div>
+
+        <p style="font-size:11px;color:var(--muted);line-height:1.5;margin:0;border-top:1px solid var(--border);padding-top:14px">
+          Buyum ustiga olib boring: profilingizda va reytingda qanday ko‘rinishini shu yerda jonli ko‘rasiz.
+        </p>
+      </aside>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   SCREEN: TARIFLAR (PLANS)
    ========================================================================== */
 function renderPlans() {
   const currentPlan = app.state.profile.plan || 'free';
 
   return `
-    <div style="max-width:1100px;margin:0 auto">
-      <div class="page-title-bar" style="text-align:center">
-        <h1>💎 Obuna Ta’riflari (Plans)</h1>
-        <p>Bilimingizni kengaytiring, AI ustozi bilan o‘rganing va professional dasturchi bo‘ling.</p>
+    <div style="max-width:1050px;margin:0 auto">
+      <div class="page-heading" style="text-align:center;display:block">
+        <h1>Obuna Ta’riflari (Plans)</h1>
+        <p>LumenCo imkoniyatlarini kengaytiring va sun‘iy intellekt ustozi yordamida o‘rganing.</p>
       </div>
 
       <div class="plans-grid">
-        <!-- FREE PLAN -->
+        <!-- Free -->
         <div class="plan-card ${currentPlan === 'free' ? 'featured' : ''}">
           <h3>Free (Boshlang‘ich)</h3>
-          <p style="color:var(--muted);font-size:13px">Dasturlashga endi qadam qo‘yayotganlar uchun.</p>
-          <div class="plan-price">0 so‘m <span>/ umrbod bepul</span></div>
-          <ul class="plan-features-list">
-            <li class="plan-feature-item"><span class="check">✓</span> 20 ta dars (Medium daraja)</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Oddiy profil foni va shablonlar</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Brauzer kompilyatori (Asosiy)</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Loyihalar yaratish</li>
+          <p style="color:var(--muted);font-size:13px">Dasturlashni endi boshlayotganlar uchun.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">0 so‘m</div>
+          <div style="color:var(--muted);font-size:12px;margin-bottom:20px">Umrbod bepul</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
+            <li><span style="color:var(--lime);font-weight:800">✓</span> 20 ta dars (Medium daraja)</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Oddiy profil foni va shablonlar</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Asosiy brauzer kompilyatori</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Loyihalar yaratish</li>
           </ul>
           ${currentPlan === 'free' ? `
-            <button class="atom-btn atom-btn-secondary" disabled>Amaldagi tarif</button>
+            <button class="btn btn-secondary" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="atom-btn atom-btn-secondary" type="button" data-action="select-plan" data-plan="free">Tanlash</button>
+            <button class="btn btn-secondary" type="button" data-action="select-plan" data-plan="free">Tanlash</button>
           `}
         </div>
 
-        <!-- PRO PLAN -->
+        <!-- Pro -->
         <div class="plan-card ${currentPlan === 'pro' ? 'featured' : ''}">
-          <span class="plan-badge pro">Tavsiya etiladi</span>
           <h3>Pro (Kuchli O‘sish)</h3>
-          <p style="color:var(--muted);font-size:13px">O‘rta va yuqori darajadagi dasturlash ko‘nikmalari.</p>
-          <div class="plan-price">79 000 so‘m <span>/ oy</span></div>
-          <div style="color:var(--cyan);font-weight:700;font-size:12px">yoki 500 coin bilan</div>
-          <ul class="plan-features-list">
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>100 ta dars</strong> (Medium Solid -&gt; High)</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>Duolingo uslubidagi AI Pet ("Lumi")</strong> ustoz</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Barcha animatsiyali ramkalar va fonlar ochiq</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>2x XP va Coin</strong> mukofotlari</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Barcha 8 ta muharrir temalari</li>
+          <p style="color:var(--muted);font-size:13px">O‘rta va mustahkam bilim oluvchilar uchun.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">79 000 so‘m</div>
+          <div style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:20px">yoki 500 coin bilan / oy</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>100 ta dars</strong> (Medium Solid -&gt; High)</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>AI Pet ustozi Lumi</strong> yordami</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Animatsiyali ramkalar va fonlar ochiq</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>2x XP va Coin</strong> mukofotlari</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Barcha muharrir temalari</li>
           </ul>
           ${currentPlan === 'pro' ? `
-            <button class="atom-btn atom-btn-primary" disabled>Amaldagi tarif</button>
+            <button class="btn" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="atom-btn atom-btn-primary" type="button" data-action="select-plan" data-plan="pro">Faollashtirish (500 Coin)</button>
+            <button class="btn" type="button" data-action="select-plan" data-plan="pro">Faollashtirish (500 Coin)</button>
           `}
         </div>
 
-        <!-- MAX PLAN -->
-        <div class="plan-card max-tier ${currentPlan === 'max' ? 'featured' : ''}">
-          <span class="plan-badge max">Ekspert & AI</span>
-          <h3>Max (Cheksiz AI & Fullstack)</h3>
-          <p style="color:var(--muted);font-size:13px">Katta tizimlar, Sun‘iy Intellekt va to‘liq arxitektura.</p>
-          <div class="plan-price">149 000 so‘m <span>/ oy</span></div>
-          <div style="color:var(--orange);font-weight:700;font-size:12px">yoki 1 200 coin bilan</div>
-          <ul class="plan-features-list">
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>350 ta to‘liq dars</strong> (AI, Neyrotarmoqlar, Fullstack)</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>To‘liq AI Ustoz</strong>: kodingizni tekshiradi va yo‘naltiradi</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>Pet Garderobi</strong>: shlyapa, ko‘zoynak, ranglarni erkin sozlash</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>Noyob VIP sariq-qora ramka</strong> va Laboratoriya foni</li>
-            <li class="plan-feature-item"><span class="check">✓</span> <strong>3x XP va Coin</strong> mukofotlari</li>
-            <li class="plan-feature-item"><span class="check">✓</span> Ustuvor server tezligi va cheksiz loyihalar</li>
+        <!-- Max -->
+        <div class="plan-card max ${currentPlan === 'max' ? 'featured' : ''}">
+          <h3>Max (To‘liq AI &amp; Fullstack)</h3>
+          <p style="color:var(--muted);font-size:13px">Katta tizimlar, AI va Fullstack arxitektura.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">149 000 so‘m</div>
+          <div style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:20px">yoki 1 200 coin bilan / oy</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>350 ta to‘liq dars</strong> (AI, Neyrotarmoqlar, Fullstack)</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>To‘liq AI Ustoz</strong>: kodingizni tekshirib yo‘naltiradi</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>Pet Garderobi</strong>: Lumi ko‘rinishini sozlash</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>Noyob VIP sariq-qora ramka</strong> va Laboratoriya foni</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>3x XP va Coin</strong> mukofotlari</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Cheksiz loyihalar va ustuvor server tezligi</li>
           </ul>
           ${currentPlan === 'max' ? `
-            <button class="atom-btn atom-btn-orange" disabled>Amaldagi tarif</button>
+            <button class="btn" style="background:var(--orange)" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="atom-btn atom-btn-orange" type="button" data-action="select-plan" data-plan="max">Faollashtirish (1200 Coin)</button>
+            <button class="btn" style="background:var(--orange)" type="button" data-action="select-plan" data-plan="max">Faollashtirish (1200 Coin)</button>
           `}
         </div>
       </div>
@@ -800,77 +883,75 @@ function renderAdmin() {
   const users = app.state.adminUsers || [];
 
   return `
-    <div style="max-width:1100px;margin:0 auto">
-      <div class="page-title-bar" style="display:flex;justify-content:space-between;align-items:center">
+    <div style="max-width:1050px;margin:0 auto">
+      <div class="page-heading">
         <div>
-          <h1>🛡️ Boshqaruv Markazi (Admin Panel)</h1>
-          <p>Foydalanuvchilar, tariflar va xavfsizlik nazorati. Admin: <strong>Muhammadbek Rafiqov (@kembodev)</strong></p>
-        </div>
-        <button class="atom-btn atom-btn-secondary" type="button" data-action="reload-admin">Ma’lumotlarni yangilash</button>
-      </div>
-
-      <div class="admin-stats-grid">
-        <div class="admin-stat-card">
-          <span>Jami foydalanuvchilar</span>
-          <strong>${users.length}</strong>
-        </div>
-        <div class="admin-stat-card">
-          <span>Faol tariflar</span>
-          <strong style="color:var(--cyan)">Max (2) · Pro (2)</strong>
-        </div>
-        <div class="admin-stat-card">
-          <span>Bloklanganlar</span>
-          <strong style="color:var(--danger)">${users.filter((u) => u.isBanned).length}</strong>
-        </div>
-        <div class="admin-stat-card">
-          <span>Tizim holati</span>
-          <strong style="color:var(--lime)">Online ●</strong>
+          <h1>LumenCo Admin Panel</h1>
+          <p>Tizim boshqaruvi. Mas’ul: <strong>Muhammadbek Rafiqov (@kembodev)</strong></p>
         </div>
       </div>
 
-      <div class="atom-panel" style="overflow-x:auto">
-        <h3 style="margin-top:0">Foydalanuvchilar ro‘yxati</h3>
-        <table class="admin-users-table">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-icon">${icon('user')}</span>
+          <div><span>Foydalanuvchilar</span><strong>${users.length}</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon lime">${icon('gem')}</span>
+          <div><span>Faol Tariflar</span><strong>Max (2) · Pro (2)</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon orange">${icon('shield')}</span>
+          <div><span>Bloklanganlar</span><strong>${users.filter((u) => u.isBanned).length}</strong></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon purple">${icon('bolt')}</span>
+          <div><span>Server Holati</span><strong style="color:var(--lime)">Online</strong></div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
           <thead>
-            <tr>
-              <th>Foydalanuvchi</th>
-              <th>Email</th>
-              <th>Tarif</th>
-              <th>Coin / XP</th>
-              <th>Holat</th>
-              <th>Amallar</th>
+            <tr style="border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase">
+              <th style="padding:14px 18px;text-align:left">Foydalanuvchi</th>
+              <th style="padding:14px 18px;text-align:left">Email</th>
+              <th style="padding:14px 18px;text-align:left">Tarif</th>
+              <th style="padding:14px 18px;text-align:left">Balans</th>
+              <th style="padding:14px 18px;text-align:left">Holat</th>
+              <th style="padding:14px 18px;text-align:right">Amallar</th>
             </tr>
           </thead>
           <tbody>
             ${users.map((u) => `
-              <tr>
-                <td>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:14px 18px">
                   <strong>${escapeHtml(u.name)}</strong>
                   <small style="color:var(--muted);display:block">@${escapeHtml(u.username)}</small>
                 </td>
-                <td style="color:var(--muted-light)">${escapeHtml(u.email)}</td>
-                <td>
-                  <select class="atom-pill-btn" data-action="admin-change-plan" data-user-id="${escapeHtml(u.id)}">
+                <td style="padding:14px 18px;color:var(--muted-light)">${escapeHtml(u.email)}</td>
+                <td style="padding:14px 18px">
+                  <select class="pill-badge" data-action="admin-change-plan" data-user-id="${escapeHtml(u.id)}">
                     <option value="free" ${u.plan === 'free' ? 'selected' : ''}>Free</option>
                     <option value="pro" ${u.plan === 'pro' ? 'selected' : ''}>Pro</option>
                     <option value="max" ${u.plan === 'max' ? 'selected' : ''}>Max</option>
                   </select>
                 </td>
-                <td>
-                  <strong>🪙 ${formatNumber(u.coins || 0)}</strong> · ${formatNumber(u.xp || 0)} XP
+                <td style="padding:14px 18px">
+                  <strong>${formatNumber(u.coins || 0)} coin</strong>
                 </td>
-                <td>
-                  <span class="user-status-pill ${u.isBanned ? 'banned' : 'active'}">
-                    ${u.isBanned ? '🚫 Bloklangan' : '✅ Faol'}
+                <td style="padding:14px 18px">
+                  <span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:${u.isBanned ? 'rgba(239,68,68,0.15);color:#ef4444' : 'rgba(16,185,129,0.15);color:#10b981'}">
+                    ${u.isBanned ? 'Bloklangan' : 'Faol'}
                   </span>
                 </td>
-                <td>
-                  <div style="display:flex;gap:6px">
-                    <button class="atom-btn ${u.isBanned ? 'atom-btn-secondary' : 'atom-btn-danger'}" style="padding:4px 10px;font-size:11px" type="button" data-action="admin-toggle-ban" data-user-id="${escapeHtml(u.id)}">
+                <td style="padding:14px 18px;text-align:right">
+                  <div style="display:inline-flex;gap:6px">
+                    <button class="${u.isBanned ? 'btn btn-secondary' : 'btn btn-danger'}" style="height:32px;padding:0 10px;font-size:11px" type="button" data-action="admin-toggle-ban" data-user-id="${escapeHtml(u.id)}">
                       ${u.isBanned ? 'Blokdan chiqarish' : 'Ban qilish'}
                     </button>
-                    <button class="atom-btn atom-btn-secondary" style="padding:4px 10px;font-size:11px" type="button" data-action="admin-give-coins" data-user-id="${escapeHtml(u.id)}">
-                      🪙 +500 Coin
+                    <button class="btn btn-secondary" style="height:32px;padding:0 10px;font-size:11px" type="button" data-action="admin-give-coins" data-user-id="${escapeHtml(u.id)}">
+                      +500 Coin
                     </button>
                   </div>
                 </td>
@@ -884,23 +965,27 @@ function renderAdmin() {
 }
 
 /* ==========================================================================
-   SCREEN: LESSONS (DARSLAR)
+   SCREEN: DARSLAR
    ========================================================================== */
 function renderLessons() {
-  const allLessons = app.state.lessons || [];
-  const tracks = ['Barchasi', ...new Set(allLessons.map((l) => l.track))];
-  const filtered = allLessons.filter((l) => app.lessonFilter === 'Barchasi' || l.track === app.lessonFilter);
+  const lessons = app.state.lessons || [];
+  const tracks = ['Barchasi', ...new Set(lessons.map((l) => l.track))];
+  const filtered = lessons.filter((l) => app.lessonFilter === 'Barchasi' || l.track === app.lessonFilter);
 
   return `
     <div>
-      <div class="page-title-bar">
-        <h1>⚛️ Darslar & Kod Mashg‘ulotlari</h1>
-        <p>Har bir darsni o‘rganing, amaliy topshiriqni bajaring va coin/XP mukofotlariga ega bo‘ling.</p>
+      <div class="page-heading">
+        <div>
+          <h1>Dasturlash Darslari</h1>
+          <p>HTML, CSS, JavaScript, SOLID arxitekturasi va AI darsliklari.</p>
+        </div>
       </div>
 
-      <div class="shop-tabs-bar">
+      <div class="filter-tabs">
         ${tracks.map((t) => `
-          <button class="shop-tab-btn ${app.lessonFilter === t ? 'active' : ''}" type="button" data-action="lesson-filter" data-filter="${escapeHtml(t)}">${escapeHtml(t)}</button>
+          <button class="filter-tab-btn ${app.lessonFilter === t ? 'active' : ''}" type="button" data-action="lesson-filter" data-filter="${escapeHtml(t)}">
+            ${escapeHtml(t)}
+          </button>
         `).join('')}
       </div>
 
@@ -908,18 +993,18 @@ function renderLessons() {
         ${filtered.map((l) => {
           const completed = app.state.completedLessons?.includes(l.id);
           return `
-            <div class="atom-panel" style="display:flex;flex-direction:column;justify-content:space-between">
+            <div class="panel" style="display:flex;flex-direction:column;justify-content:space-between">
               <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-                  <span style="font-size:11px;font-weight:700;color:var(--cyan)">${escapeHtml(l.track)}</span>
-                  <span class="user-status-pill active">${escapeHtml(l.level)}</span>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:11px;font-weight:700">
+                  <span style="color:var(--cyan)">${escapeHtml(l.track)}</span>
+                  <span style="color:var(--muted)">${escapeHtml(l.level)}</span>
                 </div>
-                <h3 style="margin:0 0 8px;font-size:16px">${escapeHtml(l.title)}</h3>
+                <h3 style="margin:0 0 8px;font-size:15px">${escapeHtml(l.title)}</h3>
                 <div style="font-size:12px;color:var(--muted)">⏱️ ${escapeHtml(l.duration)} · +${l.xp} XP</div>
               </div>
               <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-weight:700;color:var(--gold)">🪙 +${l.coins} coin</span>
-                <button class="atom-btn ${completed ? 'atom-btn-secondary' : 'atom-btn-primary'}" type="button" data-action="open-lesson" data-lesson-id="${escapeHtml(l.id)}">
+                <span style="color:var(--gold);font-weight:700">+${l.coins} coin</span>
+                <button class="btn ${completed ? 'btn-secondary' : ''}" style="height:32px;font-size:11px" type="button" data-action="open-lesson" data-lesson-id="${escapeHtml(l.id)}">
                   ${completed ? '✓ Bajarildi' : 'Boshlash'}
                 </button>
               </div>
@@ -932,78 +1017,22 @@ function renderLessons() {
 }
 
 /* ==========================================================================
-   SCREEN: WORKSPACE (WEB / PROYEKTLAR)
-   ========================================================================== */
-function renderWorkspace() {
-  const project = getProject();
-
-  return `
-    <div>
-      <div class="page-title-bar" style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <h1>⊞ Web Loyihalar Laboratoriyasi</h1>
-          <p>O‘z veb-saytlaringizni quring, fayllarni tahrirlang va natijani real vaqtda ko‘ring.</p>
-        </div>
-        <button class="atom-btn atom-btn-primary" type="button" data-action="new-project">
-          ${icon('plus')} <span>Yangi loyiha</span>
-        </button>
-      </div>
-
-      <div style="display:grid;grid-template-columns:300px 1fr;gap:20px">
-        <!-- Projects list -->
-        <div class="atom-panel">
-          <h3 style="margin-top:0">Loyihalaringiz (${app.state.projects.length})</h3>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${app.state.projects.map((p) => `
-              <button class="atom-pill-btn" style="width:100%;justify-content:space-between;height:44px;${p.id === project?.id ? 'border-color:var(--cyan);background:var(--bg-card-hover)' : ''}" type="button" data-action="open-project" data-project-id="${escapeHtml(p.id)}">
-                <span>📁 ${escapeHtml(p.name)}</span>
-                <small style="color:var(--muted)">${Object.keys(p.files || {}).length} fayl</small>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Project Editor preview / actions -->
-        <div class="atom-panel">
-          ${project ? `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-              <div>
-                <h2 style="margin:0">${escapeHtml(project.name)}</h2>
-                <small style="color:var(--muted)">Tuzilma: ${escapeHtml(project.template)}</small>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="atom-btn atom-btn-secondary" type="button" data-action="new-file">${icon('plus')} Fayl</button>
-                <button class="atom-btn atom-btn-primary" type="button" data-action="navigate" data-screen="editor">Muharrirda ochish 🚀</button>
-              </div>
-            </div>
-
-            <div style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--border-subtle);background:#ffffff">
-              <iframe style="width:100%;height:100%;border:0" srcdoc="${escapeHtml(project.files['index.html'] || '<h1>Loyiha</h1>')}" title="Loyiha"></iframe>
-            </div>
-          ` : `
-            <p>Loyiha topilmadi. Yangi loyiha yarating.</p>
-          `}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-/* ==========================================================================
-   SCREEN: PROFILE
+   SCREEN: PROFIL
    ========================================================================== */
 function renderProfile() {
   const profile = app.state.profile;
 
   return `
-    <div style="max-width:900px;margin:0 auto">
-      <div class="page-title-bar">
-        <h1>👤 Profil Sozlamalari</h1>
-        <p>Ismingiz, tarifingiz, bezaklar va shaxsiy natijalaringiz.</p>
+    <div style="max-width:850px;margin:0 auto">
+      <div class="page-heading">
+        <div>
+          <h1>Foydalanuvchi Profili</h1>
+          <p>Shaxsiy ma’lumotlaringiz va jihozlangan bezaklar.</p>
+        </div>
       </div>
 
-      <div class="atom-panel ${profile.bgItem || ''} ${profile.frameItem || ''}" style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
-        <div class="preview-profile-avatar" style="width:80px;height:80px;font-size:28px">MU</div>
+      <div class="panel ${profile.bgItem || ''} ${profile.frameItem || ''}" style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
+        <div class="avatar" style="width:70px;height:70px;font-size:24px">MU</div>
         <div>
           <h2 style="margin:0 0 4px">${escapeHtml(profile.name)}</h2>
           <div style="color:var(--cyan);font-weight:700">@${escapeHtml(profile.username)} · ${escapeHtml(profile.role.toUpperCase())}</div>
@@ -1011,8 +1040,8 @@ function renderProfile() {
         </div>
       </div>
 
-      <div class="atom-panel">
-        <h3>Profil ma’lumotlarini yangilash</h3>
+      <div class="panel">
+        <h3 style="margin-top:0">Profilni tahrirlash</h3>
         <form data-form="profile">
           <div class="field">
             <label>Ism</label>
@@ -1026,7 +1055,7 @@ function renderProfile() {
             <label>Bio</label>
             <textarea name="bio">${escapeHtml(profile.bio)}</textarea>
           </div>
-          <button class="atom-btn atom-btn-primary" type="submit">Saqlash</button>
+          <button class="btn" type="submit">Saqlash</button>
         </form>
       </div>
     </div>
@@ -1034,7 +1063,7 @@ function renderProfile() {
 }
 
 /* ==========================================================================
-   SCREEN ROUTER & RENDER
+   APP RENDER ROUTER
    ========================================================================== */
 function render() {
   if (!app.state) {
@@ -1042,15 +1071,14 @@ function render() {
     return;
   }
 
-  // Check if current user is banned
   if (app.state.profile.isBanned) {
     appRoot.innerHTML = `
-      <main class="banned-screen">
-        <div class="banned-card">
-          <div class="banned-icon">🚫</div>
-          <h1 style="color:#ef4444;margin:0 0 10px">Hisobingiz Bloklangan</h1>
-          <p style="color:var(--muted-light);margin-bottom:24px">Qoidabuzarlik yoki xavfsizlik talablari sababli ma’muriyat tomonidan hisobingizga kirish cheklandi.</p>
-          <button class="atom-btn atom-btn-primary" type="button" data-action="unban-self-test">Blokdan chiqarish (Test / Admin)</button>
+      <main style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px">
+        <div class="panel" style="max-width:440px;border-color:var(--danger)">
+          <div style="font-size:48px;margin-bottom:12px;color:var(--danger)">🚫</div>
+          <h2 style="margin:0 0 8px;color:#ffffff">Hisobingiz Cheklangan</h2>
+          <p style="color:var(--muted-light);margin-bottom:20px">Qoidabuzarlik yoki tekshiruv sababli ma’muriyat tomonidan hisobingiz bloklangan.</p>
+          <button class="btn" type="button" data-action="unban-self-test">Blokdan chiqarish (Test)</button>
         </div>
       </main>
     `;
@@ -1059,65 +1087,50 @@ function render() {
 
   let content = '';
   switch (app.screen) {
-    case 'compiler':
-      content = renderCompiler();
-      break;
-    case 'typing':
-      content = renderTypingGame();
-      break;
-    case 'game':
-      content = renderGameHub();
-      break;
-    case 'leaderboard':
-      content = renderLeaderboard();
-      break;
-    case 'shop':
-      content = renderShop();
-      break;
-    case 'plans':
-      content = renderPlans();
-      break;
-    case 'admin':
-      content = renderAdmin();
-      break;
-    case 'lessons':
-      content = renderLessons();
-      break;
-    case 'profile':
-      content = renderProfile();
-      break;
-    default:
-      content = renderWorkspace();
+    case 'editor': content = renderEditorScreen(); break;
+    case 'compiler': content = renderCompiler(); break;
+    case 'typing': content = renderTypingGame(); break;
+    case 'leaderboard': content = renderLeaderboard(); break;
+    case 'shop': content = renderShop(); break;
+    case 'plans': content = renderPlans(); break;
+    case 'admin': content = renderAdmin(); break;
+    case 'lessons': content = renderLessons(); break;
+    case 'profile': content = renderProfile(); break;
+    default: content = renderWorkspace();
   }
 
-  appRoot.innerHTML = `
-    ${renderTopbar()}
-    <main class="atom-main">${content}</main>
-    ${renderPetWidget()}
-  `;
+  renderShell(content);
 
-  renderModal();
-
-  // If compiler is open, trigger run preview
   if (app.screen === 'compiler') runCompilerCode();
 
-  // If typing game is active, bind typing arena focus
   if (app.screen === 'typing' && !app.typingFinished) {
-    const hiddenInput = document.getElementById('typing-hidden-input');
-    if (hiddenInput) {
-      hiddenInput.focus();
-      hiddenInput.oninput = handleTypingInput;
+    const input = document.getElementById('typing-hidden-input');
+    if (input) {
+      input.focus();
+      input.oninput = handleTypingInput;
     }
-  }
-
-  // Translate markup to active locale
-  if (window.LumenI18n) {
-    appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
   }
 }
 
 function handleTypingInput(e) {
-  startTypingTimer();
+  if (!app.typingStartTime) {
+    app.typingStartTime = Date.now();
+    app.typingTimer = setInterval(() => {
+      app.typingTimeLeft -= 1;
+      if (app.typingTimeLeft <= 0) {
+        clearInterval(app.typingTimer);
+        finishTypingGame();
+      } else {
+        const seconds = Math.max(1, (Date.now() - app.typingStartTime) / 1000);
+        app.typingWpm = Math.round((app.typingIndex / 5 / seconds) * 60);
+        const wpmEl = document.getElementById('typing-wpm');
+        const timeEl = document.getElementById('typing-time');
+        if (wpmEl) wpmEl.textContent = app.typingWpm;
+        if (timeEl) timeEl.textContent = `${app.typingTimeLeft}s`;
+      }
+    }, 1000);
+  }
+
   const val = e.target.value;
   if (!val) return;
   const lastChar = val[val.length - 1];
@@ -1133,10 +1146,13 @@ function handleTypingInput(e) {
     app.typingMistakes += 1;
   }
 
-  updateTypingStats();
+  const seconds = Math.max(1, (Date.now() - app.typingStartTime) / 1000);
+  app.typingWpm = Math.round((app.typingIndex / 5 / seconds) * 60);
+  const total = app.typingIndex + app.typingMistakes;
+  app.typingAcc = total > 0 ? Math.round((app.typingIndex / total) * 100) : 100;
+
   e.target.value = '';
 
-  // Update display chars directly for high speed responsiveness
   const display = document.getElementById('typing-display-text');
   if (display) {
     display.innerHTML = app.typingText.split('').map((char, index) => {
@@ -1148,8 +1164,23 @@ function handleTypingInput(e) {
   }
 }
 
+async function finishTypingGame() {
+  app.typingFinished = true;
+  if (app.typingTimer) clearInterval(app.typingTimer);
+  try {
+    app.state = await request('/api/game/record', {
+      method: 'POST',
+      body: JSON.stringify({ wpm: app.typingWpm, accuracy: app.typingAcc })
+    });
+    toast('Tabriklaymiz! +50 XP va +30 Coin hisobingizga qo‘shildi!');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+  render();
+}
+
 /* ==========================================================================
-   MODAL RENDERING
+   MODAL RENDER
    ========================================================================== */
 function modalFrame(title, description, body, actions) {
   return `
@@ -1178,26 +1209,26 @@ function renderModal() {
   if (app.modal === 'new-project') {
     modalRoot.innerHTML = modalFrame(
       'Yangi Loyiha',
-      'Loyiha nomini bering va boshlang‘ich andozani tanlang.',
+      'Loyiha nomini va boshlang‘ich shablonni tanlang.',
       `
         <form id="new-project-form" data-form="new-project">
           <div class="field">
             <label>Loyiha nomi</label>
-            <input name="name" placeholder="Masalan: Mening Portfoliom" required autofocus />
+            <input name="name" placeholder="Masalan: Shaxsiy Portfolio" required autofocus />
           </div>
           <div class="field">
-            <label>Boshlang‘ich andoza</label>
+            <label>Shablon</label>
             <select name="template">
               <option value="portfolio">Portfolio (HTML, CSS, JS)</option>
-              <option value="webapp">Web ilova (Modulli tuzilma)</option>
+              <option value="webapp">Veb ilova (Modulli)</option>
               <option value="blank">Bo‘sh loyiha</option>
             </select>
           </div>
         </form>
       `,
       `
-        <button class="atom-btn atom-btn-secondary" type="button" data-action="close-modal">Bekor qilish</button>
-        <button class="atom-btn atom-btn-primary" type="submit" form="new-project-form">Loyiha yaratish</button>
+        <button class="btn btn-secondary" type="button" data-action="close-modal">Bekor qilish</button>
+        <button class="btn" type="submit" form="new-project-form">Yaratish</button>
       `
     );
   } else if (app.modal === 'new-file') {
@@ -1213,15 +1244,15 @@ function renderModal() {
         </form>
       `,
       `
-        <button class="atom-btn atom-btn-secondary" type="button" data-action="close-modal">Bekor qilish</button>
-        <button class="atom-btn atom-btn-primary" type="submit" form="new-file-form">Yaratish</button>
+        <button class="btn btn-secondary" type="button" data-action="close-modal">Bekor qilish</button>
+        <button class="btn" type="submit" form="new-file-form">Fayl yaratish</button>
       `
     );
   } else if (app.modal === 'pet-wardrobe') {
     const pet = app.state.profile.petConfig || {};
     modalRoot.innerHTML = modalFrame(
-      '👒 Lumi Garderobi (AI Pet Ustoz)',
-      'Ustozi kiyimlarini va rangini xohlaganingizcha moslashtiring.',
+      'Lumi Garderobi',
+      'AI ustozi Lumi rangini va aksessuarlarini sozlang.',
       `
         <form id="pet-wardrobe-form" data-form="pet-wardrobe">
           <div class="field">
@@ -1229,41 +1260,23 @@ function renderModal() {
             <input name="name" value="${escapeHtml(pet.name || 'Lumi')}" required />
           </div>
           <div class="field">
-            <label>Bosh kiyimi</label>
-            <select name="hat">
-              <option value="none" ${pet.hat === 'none' ? 'selected' : ''}>Hech qanday</option>
-              <option value="crown" ${pet.hat === 'crown' ? 'selected' : ''}>👑 Oltin Toj</option>
-              <option value="wizard" ${pet.hat === 'wizard' ? 'selected' : ''}>🧙 Sehrgar Qalpog‘i</option>
-              <option value="beanie" ${pet.hat === 'beanie' ? 'selected' : ''}>🧢 Kiber Bini</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Ko‘zoynak</label>
-            <select name="glasses">
-              <option value="none" ${pet.glasses === 'none' ? 'selected' : ''}>Hech qanday</option>
-              <option value="vr" ${pet.glasses === 'vr' ? 'selected' : ''}>🥽 VR Garnitura</option>
-              <option value="sunglasses" ${pet.glasses === 'sunglasses' ? 'selected' : ''}>🕶️ Qora Ko‘zoynak</option>
-              <option value="neon" ${pet.glasses === 'neon' ? 'selected' : ''}>👓 Neon Ko‘zoynak</option>
-            </select>
-          </div>
-          <div class="field">
             <label>Rangi</label>
             <select name="color">
               <option value="cyan" ${pet.color === 'cyan' ? 'selected' : ''}>Kiber Moviy</option>
               <option value="lime" ${pet.color === 'lime' ? 'selected' : ''}>Zumrad Yashil</option>
               <option value="gold" ${pet.color === 'gold' ? 'selected' : ''}>Oltin Sariq</option>
-              <option value="purple" ${pet.color === 'purple' ? 'selected' : ''}>Kiber Binafsha</option>
+              <option value="purple" ${pet.color === 'purple' ? 'selected' : ''}>Binafsha</option>
             </select>
           </div>
         </form>
       `,
       `
-        <button class="atom-btn atom-btn-secondary" type="button" data-action="close-modal">Yopish</button>
-        <button class="atom-btn atom-btn-primary" type="submit" form="pet-wardrobe-form">Saqlash</button>
+        <button class="btn btn-secondary" type="button" data-action="close-modal">Yopish</button>
+        <button class="btn" type="submit" form="pet-wardrobe-form">Saqlash</button>
       `
     );
   } else if (app.modal === 'lesson') {
-    const lesson = app.state.lessons.find((l) => l.id === app.modalLessonId);
+    const lesson = app.state.lessons?.find((l) => l.id === app.modalLessonId);
     if (!lesson) return;
     const completed = app.state.completedLessons?.includes(lesson.id);
 
@@ -1271,23 +1284,22 @@ function renderModal() {
       escapeHtml(lesson.title),
       `${escapeHtml(lesson.track)} · ${escapeHtml(lesson.level)} · ${escapeHtml(lesson.duration)}`,
       `
-        <div style="font-size:14px;line-height:1.6;color:var(--ink-secondary)">
-          <p>Ushbu amaliy darsda siz <strong>${escapeHtml(lesson.title)}</strong> tushunchasini to‘liq o‘rganasiz.</p>
-          <div style="background:#0b0f19;border:1px solid var(--border-strong);border-radius:10px;padding:16px;margin:16px 0;font-family:var(--font-mono);font-size:12px;color:#38bdf8">
-            // Namuna kod<br>
+        <div style="font-size:13px;line-height:1.6;color:var(--ink-secondary)">
+          <p>Ushbu darsda siz <strong>${escapeHtml(lesson.title)}</strong> mavzusini amaliy tarzda o‘rganasiz.</p>
+          <div style="background:#090d16;border:1px solid var(--border);border-radius:10px;padding:16px;margin:16px 0;font-family:var(--font-mono);font-size:12px;color:var(--cyan)">
+            // Mavzu kodi<br>
             const lesson = "${escapeHtml(lesson.title)}";<br>
-            console.log("Muvaffaqiyatli o'zlashtirildi!");
+            console.log("Muvaffaqiyatli yakunlandi!");
           </div>
-          <p>Kodni brauzerda sinab ko‘ring va darsni yakunlang!</p>
           <div style="padding:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;color:var(--gold);font-weight:700">
             Mukofot: +${lesson.xp} XP · +${lesson.coins} Coin
           </div>
         </div>
       `,
       `
-        <button class="atom-btn atom-btn-secondary" type="button" data-action="close-modal">Yopish</button>
-        <button class="atom-btn atom-btn-primary" type="button" data-action="complete-lesson" data-lesson-id="${escapeHtml(lesson.id)}" ${completed ? 'disabled' : ''}>
-          ${completed ? '✓ Dars allaqachon bajarilgan' : 'Darsni yakunlash'}
+        <button class="btn btn-secondary" type="button" data-action="close-modal">Yopish</button>
+        <button class="btn" type="button" data-action="complete-lesson" data-lesson-id="${escapeHtml(lesson.id)}" ${completed ? 'disabled' : ''}>
+          ${completed ? '✓ Bajarilgan' : 'Darsni yakunlash'}
         </button>
       `
     );
@@ -1295,85 +1307,63 @@ function renderModal() {
 }
 
 /* ==========================================================================
-   EVENT HANDLERS & ACTIONS
+   EVENT HANDLERS
    ========================================================================== */
 async function handleClick(e) {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const action = btn.dataset.action;
 
-  if (action === 'navigate') {
-    return navigate(btn.dataset.screen);
-  }
-  if (action === 'toggle-fullscreen') {
-    return toggleFullscreen();
-  }
-  if (action === 'close-modal' || (action === 'backdrop-close' && e.target === btn)) {
-    return closeModal();
-  }
-  if (action === 'new-project') {
-    return openModal('new-project');
-  }
-  if (action === 'new-file') {
-    return openModal('new-file');
-  }
-  if (action === 'open-project') {
-    app.projectId = btn.dataset.projectId;
-    return render();
-  }
-  if (action === 'shop-filter') {
-    app.shopFilter = btn.dataset.filter;
-    return render();
-  }
-  if (action === 'lesson-filter') {
-    app.lessonFilter = btn.dataset.filter;
-    return render();
-  }
-  if (action === 'hover-shop-item') {
-    const item = app.state.shopItems.find((it) => it.id === btn.dataset.itemId);
-    if (item) {
-      app.hoveredShopItem = item;
-      render();
+  if (action === 'navigate') return navigate(btn.dataset.screen);
+  if (action === 'toggle-fullscreen') return toggleFullscreen();
+  if (action === 'close-modal' || (action === 'backdrop-close' && e.target === btn)) return closeModal();
+  if (action === 'new-project') return openModal('new-project');
+  if (action === 'new-file') return openModal('new-file');
+  if (action === 'open-project') { app.projectId = btn.dataset.projectId; return render(); }
+  if (action === 'select-file') { app.filePath = btn.dataset.path; return render(); }
+  if (action === 'save-active-file') {
+    const input = document.getElementById('project-code-input');
+    if (input && app.projectId && app.filePath) {
+      try {
+        app.state = await request(`/api/projects/${app.projectId}/files`, {
+          method: 'PUT',
+          body: JSON.stringify({ path: app.filePath, content: input.value })
+        });
+        toast('Fayl saqlandi!');
+        render();
+      } catch (err) { toast(err.message, 'error'); }
     }
+    return;
+  }
+  if (action === 'shop-filter') { app.shopFilter = btn.dataset.filter; return render(); }
+  if (action === 'lesson-filter') { app.lessonFilter = btn.dataset.filter; return render(); }
+  if (action === 'hover-shop-item') {
+    const item = app.state.shopItems?.find((it) => it.id === btn.dataset.itemId);
+    if (item) { app.hoveredShopItem = item; render(); }
     return;
   }
   if (action === 'buy-item') {
     try {
-      app.state = await request('/api/shop/purchase', {
-        method: 'POST',
-        body: JSON.stringify({ itemId: btn.dataset.itemId })
-      });
-      toast('Mahsulot muvaffaqiyatli xarid qilindi!');
+      app.state = await request('/api/shop/purchase', { method: 'POST', body: JSON.stringify({ itemId: btn.dataset.itemId }) });
+      toast('Bezak xarid qilindi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'equip-item') {
     try {
-      app.state = await request('/api/profile/equip', {
-        method: 'PATCH',
-        body: JSON.stringify({ itemId: btn.dataset.itemId })
-      });
+      app.state = await request('/api/profile/equip', { method: 'PATCH', body: JSON.stringify({ itemId: btn.dataset.itemId }) });
       toast('Profil ko‘rinishi yangilandi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'select-plan') {
     try {
-      app.state = await request('/api/plans/select', {
-        method: 'POST',
-        body: JSON.stringify({ plan: btn.dataset.plan })
-      });
-      toast(`Tarif ${btn.dataset.plan.toUpperCase()} muvaffaqiyatli faollashtirildi!`);
+      app.state = await request('/api/plans/select', { method: 'POST', body: JSON.stringify({ plan: btn.dataset.plan }) });
+      toast(`Tarif ${btn.dataset.plan.toUpperCase()} faollashtirildi!`);
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'open-lesson') {
@@ -1383,90 +1373,61 @@ async function handleClick(e) {
   if (action === 'complete-lesson') {
     try {
       app.state = await request(`/api/lessons/${btn.dataset.lessonId}/complete`, { method: 'POST' });
-      toast('Tabriklaymiz! Dars yakunlandi va mukofot berildi!');
+      toast('Dars yakunlandi va mukofot berildi!');
       closeModal();
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'pet-talk') {
     app.petBubbleIndex += 1;
     return render();
   }
-  if (action === 'open-pet-wardrobe') {
-    return openModal('pet-wardrobe');
-  }
-  if (action === 'run-compiler') {
-    return runCompilerCode();
-  }
+  if (action === 'open-pet-wardrobe') return openModal('pet-wardrobe');
+  if (action === 'run-compiler') return runCompilerCode();
   if (action === 'reset-compiler') {
-    app.compilerHtml = `<h1>Salom Dunyo!</h1>`;
-    app.compilerCss = `body { font-family: sans-serif; padding: 20px; }`;
-    app.compilerJs = `console.log('Tozalandi');`;
+    app.compilerHtml = `<h1>Salom Dunyo</h1>`;
+    app.compilerCss = `body { padding: 20px; font-family: sans-serif; }`;
+    app.compilerJs = ``;
     render();
     return;
   }
-  if (action === 'compiler-tab') {
-    app.compilerTab = btn.dataset.tab;
-    return render();
-  }
+  if (action === 'compiler-tab') { app.compilerTab = btn.dataset.tab; return render(); }
   if (action === 'save-compiler-to-project') {
     try {
       app.state = await request('/api/projects', {
         method: 'POST',
         body: JSON.stringify({ name: 'Kompilyator Loyihasi', template: 'blank' })
       });
-      toast('Kompilyatordagi kod yangi loyihaga saqlandi!');
+      toast('Yangi loyiha sifatida saqlandi!');
       app.screen = 'workspace';
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
-  if (action === 'restart-typing') {
-    initTypingGame();
-    return render();
-  }
+  if (action === 'restart-typing') { initTypingGame(); return render(); }
   if (action === 'admin-toggle-ban') {
     try {
-      app.state = await request('/api/admin/ban', {
-        method: 'POST',
-        body: JSON.stringify({ userId: btn.dataset.userId })
-      });
+      app.state = await request('/api/admin/ban', { method: 'POST', body: JSON.stringify({ userId: btn.dataset.userId }) });
       toast('Foydalanuvchi holati yangilandi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'admin-give-coins') {
     try {
-      app.state = await request('/api/admin/coins', {
-        method: 'POST',
-        body: JSON.stringify({ userId: btn.dataset.userId, amount: 500 })
-      });
-      toast('500 Coin muvaffaqiyatli qo‘shildi!');
+      app.state = await request('/api/admin/coins', { method: 'POST', body: JSON.stringify({ userId: btn.dataset.userId, amount: 500 }) });
+      toast('500 Coin qo‘shildi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (action === 'unban-self-test') {
     try {
-      app.state = await request('/api/admin/ban', {
-        method: 'POST',
-        body: JSON.stringify({ userId: app.state.profile.id })
-      });
+      app.state = await request('/api/admin/ban', { method: 'POST', body: JSON.stringify({ userId: app.state.profile.id }) });
       toast('Hisob blokdan chiqarildi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
 }
@@ -1480,54 +1441,46 @@ async function handleSubmit(e) {
 
   if (kind === 'new-project') {
     try {
-      app.state = await request('/api/projects', {
-        method: 'POST',
-        body: JSON.stringify({ name: values.get('name'), template: values.get('template') })
-      });
+      app.state = await request('/api/projects', { method: 'POST', body: JSON.stringify({ name: values.get('name'), template: values.get('template') }) });
       closeModal();
-      toast('Yangi loyiha yaratildi!');
+      toast('Loyiha yaratildi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
-
+  if (kind === 'new-file') {
+    try {
+      const p = getProject();
+      if (!p) throw new Error('Loyiha topilmadi.');
+      app.state = await request(`/api/projects/${p.id}/files`, { method: 'POST', body: JSON.stringify({ path: values.get('path'), content: '' }) });
+      app.filePath = values.get('path');
+      closeModal();
+      toast('Fayl yaratildi!');
+      render();
+    } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
   if (kind === 'profile') {
     try {
       app.state = await request('/api/profile', {
         method: 'PATCH',
-        body: JSON.stringify({
-          name: values.get('name'),
-          username: values.get('username'),
-          bio: values.get('bio')
-        })
+        body: JSON.stringify({ name: values.get('name'), username: values.get('username'), bio: values.get('bio') })
       });
       toast('Profil saqlandi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
-
   if (kind === 'pet-wardrobe') {
     try {
       app.state = await request('/api/pet/customize', {
         method: 'POST',
-        body: JSON.stringify({
-          name: values.get('name'),
-          hat: values.get('hat'),
-          glasses: values.get('glasses'),
-          color: values.get('color')
-        })
+        body: JSON.stringify({ name: values.get('name'), color: values.get('color') })
       });
       closeModal();
-      toast('Lumi ustozi kiyimlari yangilandi!');
+      toast('Lumi ko‘rinishi yangilandi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
     return;
   }
 }
@@ -1541,9 +1494,7 @@ function handleInput(e) {
 }
 
 async function handleChange(e) {
-  if (e.target.matches('[data-locale-picker]')) {
-    return setLocale(e.target.value);
-  }
+  if (e.target.matches('[data-locale-picker]')) return setLocale(e.target.value);
   if (e.target.dataset.action === 'admin-change-plan') {
     try {
       app.state = await request('/api/admin/plan', {
@@ -1552,40 +1503,29 @@ async function handleChange(e) {
       });
       toast('Foydalanuvchi tarifi yangilandi!');
       render();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    } catch (err) { toast(err.message, 'error'); }
   }
   if (e.target.dataset.action === 'compiler-load-template') {
     const val = e.target.value;
     if (val === 'clock') {
-      app.compilerHtml = `<div style="text-align:center;padding:50px"><h1 id="clock" style="font-size:50px;color:#38bdf8">00:00:00</h1></div><script>setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }, 1000);<\/script>`;
-      app.compilerCss = `body { background: #0b0f19; color: white; }`;
+      app.compilerHtml = `<div style="text-align:center;padding:50px"><h1 id="clock" style="font-size:46px;color:#38bdf8">00:00:00</h1></div><script>setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }, 1000);<\/script>`;
+      app.compilerCss = `body { background: #0c101a; color: white; }`;
       app.compilerJs = ``;
     } else if (val === 'ball') {
-      app.compilerHtml = `<canvas id="canvas" width="400" height="300" style="background:#0f172a;display:block;margin:20px auto;border-radius:12px"></canvas><script>const c = document.getElementById('canvas').getContext('2d'); let y = 50, vy = 2; function loop() { c.clearRect(0,0,400,300); c.fillStyle = '#f97316'; c.beginPath(); c.arc(200, y, 20, 0, Math.PI*2); c.fill(); y += vy; if(y>280||y<20) vy=-vy; requestAnimationFrame(loop); } loop();<\/script>`;
+      app.compilerHtml = `<canvas id="canvas" width="400" height="280" style="background:#141b2d;display:block;margin:20px auto;border-radius:12px"></canvas><script>const c = document.getElementById('canvas').getContext('2d'); let y = 50, vy = 2; function loop() { c.clearRect(0,0,400,280); c.fillStyle = '#38bdf8'; c.beginPath(); c.arc(200, y, 18, 0, Math.PI*2); c.fill(); y += vy; if(y>260||y<20) vy=-vy; requestAnimationFrame(loop); } loop();<\/script>`;
     }
     runCompilerCode();
   }
 }
 
-// Window console listener for compiler iframe
 window.addEventListener('message', (e) => {
   if (e.data?.type === 'compiler-console') {
     app.compilerConsole.push(e.data.text);
-    const box = document.querySelector('.compiler-console-box');
-    if (box) {
-      const line = document.createElement('div');
-      line.className = 'console-line info';
-      line.textContent = `> ${e.data.text}`;
-      box.appendChild(line);
-      box.scrollTop = box.scrollHeight;
-    }
   }
 });
 
 /* ==========================================================================
-   BOOTSTRAP
+   AUTH PAGE
    ========================================================================== */
 function renderAuth() {
   const isSignup = app.authMode === 'signup';
@@ -1593,25 +1533,25 @@ function renderAuth() {
     <main class="auth-page">
       <section class="auth-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="atom-logo-icon">⚛</div>
-            <div class="atom-logo-text">atom<span>js</span></div>
-          </div>
-          <select class="atom-pill-btn" data-locale-picker>
-            <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>Ózb</option>
+          <a class="brand" href="#" style="padding:0">
+            <span class="brand-mark">L</span>
+            <span class="brand-word">LumenCo<small>Build. Keep growing.</small></span>
+          </a>
+          <select class="locale-picker" data-locale-picker>
+            <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option>
             <option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option>
             <option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option>
           </select>
         </div>
 
-        <h1 style="margin:0 0 8px;font-size:26px">${isSignup ? 'Hisob yarating' : 'Hisobingizga kiring'}</h1>
+        <h1 style="margin:0 0 8px;font-size:26px">${isSignup ? 'Hisob yarating' : 'LumenCo hisobingizga kiring'}</h1>
         <p style="color:var(--muted-light);margin:0 0 24px">${isSignup ? 'Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.' : 'Loyihalaringiz va o‘sishingiz bitta joyda.'}</p>
 
         <form data-form="auth-form" onsubmit="handleAuthSubmit(event)">
           ${isSignup ? `
             <div class="field">
               <label>Ismingiz</label>
-              <input name="name" required placeholder="Masalan: Muhammadbek Rafiqov" />
+              <input name="name" required placeholder="Muhammadbek Rafiqov" />
             </div>
           ` : ''}
           <div class="field">
@@ -1622,7 +1562,7 @@ function renderAuth() {
             <label>Parol</label>
             <input type="password" name="password" minlength="8" required />
           </div>
-          <button class="atom-btn atom-btn-primary" style="width:100%;height:44px;margin-top:10px" type="submit">
+          <button class="btn" style="width:100%;height:42px;margin-top:10px" type="submit">
             ${isSignup ? 'Hisob yaratish' : 'Kirish'} ➔
           </button>
         </form>
@@ -1636,12 +1576,12 @@ function renderAuth() {
       </section>
 
       <aside class="auth-side">
-        <span style="font-size:12px;font-weight:800;letter-spacing:0.12em;color:var(--orange)">BUILD YOUR NEXT IDEA</span>
+        <span style="font-size:12px;font-weight:800;letter-spacing:0.12em;color:var(--cyan)">BUILD YOUR NEXT IDEA</span>
         <h2 style="font-size:clamp(32px, 4vw, 44px);line-height:1.15;margin:16px 0;color:#ffffff">
           Every line moves you forward.
         </h2>
         <p style="color:var(--muted-light);max-width:440px;line-height:1.6">
-          Learn, build and keep your work organized in one calm dark cyberpunk workspace.
+          Learn, build and keep your work organized in one calm studio workspace.
         </p>
       </aside>
     </main>
@@ -1675,11 +1615,12 @@ window.handleAuthSubmit = async function(e) {
     app.state = await request('/api/state');
     render();
     toast('Xush kelibsiz!');
-  } catch (err) {
-    toast(err.message, 'error');
-  }
+  } catch (err) { toast(err.message, 'error'); }
 };
 
+/* ==========================================================================
+   BOOTSTRAP
+   ========================================================================== */
 async function boot() {
   try {
     app.backend = await LumenBackend.initialize();
