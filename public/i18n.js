@@ -630,7 +630,32 @@
     ['Birga kod yozamiz', 'Let’s build together', 'Давай создавать вместе'],
     ['Kichik qadamlar katta loyihalarga olib boradi.', 'Small steps lead to ambitious projects.', 'Маленькие шаги ведут к большим проектам.'],
     ['Bugun ham bir qator oldinga.', 'One more line forward today.', 'Сегодня ещё на одну строку вперёд.'],
-    ['Yangi g‘oya', 'New idea', 'Новая идея'], ['Nima qurmoqchisan?', 'What do you want to build?', 'Что хочешь создать?']
+    ['Yangi g‘oya', 'New idea', 'Новая идея'], ['Nima qurmoqchisan?', 'What do you want to build?', 'Что хочешь создать?'],
+    ['Kompilyator', 'Compiler', 'Компилятор'],
+    ['Tez yozish', 'Speed typing', 'Быстрая печать'],
+    ['O‘ynash', 'Play', 'Играть'],
+    ['Reyting', 'Leaderboard', 'Рейтинг'],
+    ['Tariflar', 'Plans', 'Тарифы'],
+    ['Admin', 'Admin', 'Админ'],
+    ['Boshqaruv Markazi', 'Control Center', 'Центр управления'],
+    ['Ishga tushirish', 'Run', 'Запустить'],
+    ['Animatsiyali ramkalar', 'Animated frames', 'Анимированные рамки'],
+    ['Fonlar', 'Backgrounds', 'Фоны'],
+    ['Muharrir temalari', 'Editor themes', 'Темы редактора'],
+    ['Avatarlar', 'Avatars', 'Аватары'],
+    ['Pet buyumlari', 'Pet items', 'Предметы питомца'],
+    ['Pet Garderobi', 'Pet Wardrobe', 'Гардероб питомца'],
+    ['Ban qilish', 'Ban', 'Забанить'],
+    ['Blokdan chiqarish', 'Unban', 'Разблокировать'],
+    ['Bloklangan', 'Banned', 'Заблокирован'],
+    ['Faol', 'Active', 'Активен'],
+    ['Coin berish', 'Give coins', 'Выдать монеты'],
+    ['Tarifni o‘zgartirish', 'Change plan', 'Изменить тариф'],
+    ['Hisobingiz bloklangan', 'Your account is banned', 'Ваш аккаунт заблокирован'],
+    ['Oylik obuna', 'Monthly plan', 'Ежемесячный тариф'],
+    ['Umrbod bepul', 'Free forever', 'Навсегда бесплатно'],
+    ['Faollashtirish', 'Activate', 'Активировать'],
+    ['Joriy tarif', 'Current plan', 'Текущий тариф']
   ];
 
   const dictionaries = { uz: {}, en: {}, ru: {} };
