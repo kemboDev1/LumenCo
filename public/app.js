@@ -46,16 +46,15 @@ const app = {
   projectId: null,
   filePath: null,
   modal: null,
-  shopFilter: 'frame',
+  shopFilter: 'all',
   lessonFilter: 'Barchasi',
   dirty: false,
   modalLessonId: null,
-  locale: localStorage.getItem('lumenco-locale') || 'uz',
+  locale: localStorage.getItem('lumenco-locale') || 'en',
   backend: 'local',
   authenticated: false,
   authMode: 'signin',
   pendingEmail: '',
-  pendingPassword: '',
   authNotice: '',
 
   // Live hover preview in Shop
@@ -63,9 +62,9 @@ const app = {
 
   // Compiler state
   compilerTab: 'html',
-  compilerHtml: `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8">\n  <title>LumenCo Kompilyator</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0c101a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #141b2d; border: 1px solid #1e2a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0c101a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Salom, LumenCo!</h1>\n    <p>Brauzerdagi shaxsiy kod laboratoriyangiz.</p>\n    <button onclick="salom()">Meni bos</button>\n  </div>\n  <script>\n    function salom() {\n      console.log('LumenCo tugmasi bosildi!');\n      alert('Kompilyator muvaffaqiyatli ishlayapti!');\n    }\n  </script>\n</body>\n</html>`,
-  compilerCss: `/* CSS stillaringiz */\nbody { margin: 0; }`,
-  compilerJs: `// JavaScript kodingiz\nconsole.log('LumenCo kompilyatori tayyor.');`,
+  compilerHtml: `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>LumenCo Compiler</title>\n  <style>\n    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #0c101a; color: #f8fafc; }\n    .box { text-align: center; padding: 40px; border-radius: 20px; background: #141b2d; border: 1px solid #1e2a44; box-shadow: 0 10px 30px rgba(0,0,0,.5); }\n    h1 { color: #38bdf8; margin-bottom: 8px; }\n    button { background: #38bdf8; color: #0c101a; border: 0; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="box">\n    <h1>Welcome to LumenCo!</h1>\n    <p>Your personal browser coding lab.</p>\n    <button id="hello-button" type="button">Try this button</button><p id="hello-message"></p>\n  </div>\n  <script>\n    function salom() {\n      console.log('LumenCo button clicked.');\n      document.getElementById('hello-message').textContent = 'Your first interaction works.';\n    }\n  </script>\n</body>\n</html>`,
+  compilerCss: `/* Add your CSS */\nbody { margin: 0; }`,
+  compilerJs: `// Add your JavaScript\nconsole.log('LumenCo compiler is ready.');`,
   compilerConsole: ['[Tizim] LumenCo laboratoriya konsoli faol.'],
 
   // Speed typing game state
@@ -79,19 +78,19 @@ const app = {
   typingWpm: 0,
   typingAcc: 100,
 
-  // Duolingo-style Pet AI ("Lumi") state
+  // Lumi's small set of contextual learning prompts
   petBubbleIndex: 0,
   petPhrases: [
-    'Salom, Muhammadbek! Bugun qaysi loyihani quramiz?',
-    'Kompilyatorda yangi g‘oya sinab ko‘ring!',
-    'Tez yozishda yangi rekord o‘rnatib, coin yig‘ing!',
-    'Pro va Max darslarida ko‘proq XP kutmoqda!',
-    'Do‘kondan yangi animatsiyali ramka tanlang!'
+    'What are you building today?',
+    'Try a small change, then preview it.',
+    'A clear folder name makes your project easier to grow.',
+    'Take the next lesson when you are ready.',
+    'Save your work before switching projects.'
   ]
 };
 
 function icon(name) {
-  return `<span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[name] || ''}</svg></span>`;
+  return `<span class="icon" data-icon="${escapeHtml(name)}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[name] || ICONS.sparkle}</svg></span>`;
 }
 
 function escapeHtml(value) {
@@ -215,7 +214,7 @@ function renderShell(content) {
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-footer">
-          <div class="avatar ${profile.frameItem || ''}">MU</div>
+          <div class="avatar ${profile.frameItem || ''}">${escapeHtml(String(profile.name || 'B').split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase())}</div>
           <div class="profile-snippet">
             <strong>${escapeHtml(profile.name)}</strong>
             <span>@${escapeHtml(profile.username)}</span>
@@ -236,8 +235,8 @@ function renderShell(content) {
           </div>
 
           <div class="topbar-right">
-            <button class="pill-badge streak" type="button" data-action="navigate" data-screen="profile" title="Kundalik faollik">
-              ${icon('flame')} ${app.state.streak || 1}
+            <button class="pill-badge streak" type="button" data-action="navigate" data-screen="plans" title="Current plan">
+              ${icon('gem')} ${escapeHtml(String(app.state.profile.plan || 'free').toUpperCase())}
             </button>
 
             <button class="pill-badge coin" type="button" data-action="navigate" data-screen="shop">
@@ -276,12 +275,14 @@ function renderShell(content) {
 function renderPetWidget() {
   const profile = app.state?.profile;
   const pet = profile?.petConfig || { name: 'Lumi', color: 'cyan' };
+  const petColors = { cyan: '#92d9b3', lime: '#c2e58c', gold: '#e7cf8d', purple: '#c2a4ed' };
+  const petColor = petColors[pet.color] || petColors.cyan;
   const phrase = app.petPhrases[app.petBubbleIndex % app.petPhrases.length];
 
   return `
     <div class="lumi-box" id="lumi-container">
       <div class="lumi-speech" data-action="pet-talk">
-        <strong style="color:var(--cyan);display:block;margin-bottom:2px">${escapeHtml(pet.name)} (LumenCo AI):</strong>
+          <strong style="color:var(--cyan);display:block;margin-bottom:2px">${escapeHtml(pet.name)} · coding guide</strong>
         <span>${escapeHtml(phrase)}</span>
         <div style="margin-top:8px;display:flex;gap:6px">
           <button style="color:var(--cyan);font-size:10px;font-weight:700" type="button" data-action="pet-talk">Maslahat ➔</button>
@@ -293,12 +294,15 @@ function renderPetWidget() {
       <div class="lumi-svg-wrap" data-action="pet-talk" title="${escapeHtml(pet.name)}">
         <!-- Pure Vector Robot SVG -->
         <svg viewBox="0 0 36 36" width="34" height="34" fill="none">
-          <rect x="7" y="10" width="22" height="18" rx="7" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
-          <circle cx="13" cy="19" r="2.5" fill="#38bdf8"/>
-          <circle cx="23" cy="19" r="2.5" fill="#38bdf8"/>
-          <line x1="18" y1="4" x2="18" y2="10" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="18" cy="3" r="2" fill="#f97316"/>
-          <path d="M14 24 Q18 27 22 24" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+          <rect x="7" y="10" width="22" height="18" rx="7" fill="#15231c" stroke="${petColor}" stroke-width="2"/>
+          <circle cx="13" cy="19" r="2.5" fill="${petColor}"/>
+          <circle cx="23" cy="19" r="2.5" fill="${petColor}"/>
+          <line x1="18" y1="4" x2="18" y2="10" stroke="${petColor}" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="18" cy="3" r="2" fill="#e4ad78"/>
+          <path d="M14 24 Q18 27 22 24" stroke="${petColor}" stroke-width="1.8" stroke-linecap="round"/>
+          ${pet.hat === 'wizard' ? `<path d="M9 10 17 2l7 8Z" fill="#7d6ac6" stroke="${petColor}" stroke-width="1.2"/>` : ''}
+          ${pet.hat === 'crown' ? `<path d="m9 11 1-6 5 4 3-5 3 5 5-4 1 6Z" fill="#e7cf8d" stroke="#c99e4f" stroke-width="1"/>` : ''}
+          ${pet.glasses === 'vr' ? `<rect x="9" y="16" width="8" height="6" rx="2" fill="#263c36" stroke="${petColor}"/><rect x="19" y="16" width="7" height="6" rx="2" fill="#263c36" stroke="${petColor}"/><path d="M17 18h2" stroke="${petColor}"/>` : ''}
         </svg>
       </div>
     </div>
@@ -358,7 +362,7 @@ function renderWorkspace() {
             </div>
             ${project ? `
               <div style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#ffffff">
-                <iframe style="width:100%;height:100%;border:0" sandbox="" srcdoc="${escapeHtml(project.files['index.html'] || '<h2 style=\'color:#333;font-family:sans-serif;padding:20px\'>Loyiha boshlandi</h2>')}"></iframe>
+                <iframe title="${escapeHtml(project.name)} preview" data-project-preview="${escapeHtml(project.id)}" style="width:100%;height:100%;border:0" sandbox="allow-scripts" referrerpolicy="no-referrer" src="/preview.html"></iframe>
               </div>
             ` : `<p style="color:var(--muted)">Hali loyiha yaratilmagan.</p>`}
           </div>
@@ -401,7 +405,7 @@ function renderWorkspace() {
             <div class="panel-heading">
               <div><h2>Tez Yozish Mashg‘uloti</h2><p>Barmoqlaringiz tezligini sinang.</p></div>
             </div>
-            <p style="color:var(--muted-light);font-size:13px">WPM tezlik ko‘rsatkichini oshirib, coin to‘plang.</p>
+            <p style="color:var(--muted-light);font-size:13px">Practice your typing speed and save a personal record.</p>
             <button class="btn btn-secondary" style="width:100%;margin-top:10px" type="button" data-action="navigate" data-screen="typing">
               ${icon('keyboard')} Tez yozishni boshlash
             </button>
@@ -456,7 +460,7 @@ function renderEditorScreen() {
             <span>${escapeHtml(app.filePath || 'Fayl tanlanmagan')}</span>
             <span style="color:var(--cyan)">UTF-8</span>
           </div>
-          <textarea id="project-code-input" class="compiler-input-area" spellcheck="false">${escapeHtml(currentFile?.content || '')}</textarea>
+          <textarea id="project-code-input" class="compiler-input-area ${escapeHtml(app.state.profile.themeItem || '')}" spellcheck="false">${escapeHtml(currentFile?.content || '')}</textarea>
         </div>
 
         <!-- Live Preview -->
@@ -464,7 +468,7 @@ function renderEditorScreen() {
           <div style="padding:10px 16px;background:#0c101a;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)">
             Jonli natija ko‘rinishi
           </div>
-          <iframe style="flex:1;border:0;width:100%" sandbox="" srcdoc="${escapeHtml(project.files['index.html'] || '')}"></iframe>
+          <iframe title="${escapeHtml(project.name)} preview" data-project-preview="${escapeHtml(project.id)}" style="flex:1;border:0;width:100%" sandbox="allow-scripts" referrerpolicy="no-referrer" src="/preview.html"></iframe>
         </div>
       </div>
     </div>
@@ -519,7 +523,7 @@ function renderCompiler() {
           <div style="padding:8px 16px;background:#0c101a;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted)">
             Jonli natija (Sandbox)
           </div>
-          <iframe id="compiler-preview-frame" style="flex:1;border:0;width:100%" sandbox="allow-scripts" title="Natija"></iframe>
+          <iframe id="compiler-preview-frame" style="flex:1;border:0;width:100%" sandbox="allow-scripts" referrerpolicy="no-referrer" title="Compiler preview" src="/preview.html"></iframe>
         </div>
       </div>
     </div>
@@ -529,26 +533,19 @@ function renderCompiler() {
 function runCompilerCode() {
   const frame = document.getElementById('compiler-preview-frame');
   if (!frame) return;
-  const html = app.compilerHtml;
-  const css = `<style>${app.compilerCss}</style>`;
-  const js = `
-    <script>
-      const _origLog = console.log;
-      console.log = function(...args) {
-        _origLog.apply(console, args);
-        window.parent.postMessage({ type: 'compiler-console', text: args.join(' ') }, '*');
-      };
-      ${app.compilerJs}
-    <\/script>
-  `;
-  frame.srcdoc = `${css}\n${html}\n${js}`;
+  frame.contentWindow?.postMessage({
+    type: 'lumenco:compiler-preview',
+    html: app.compilerHtml,
+    css: app.compilerCss,
+    js: app.compilerJs
+  }, '*');
 }
 
 /* ==========================================================================
    SCREEN: TEZ YOZISH (SPEED TYPING)
    ========================================================================== */
 const TYPING_SNIPPETS = [
-  'const developer = { name: "Muhammadbek", skill: "Fullstack", focus: "AI" };',
+  'const developer = { name: "Builder", skill: "Frontend", focus: "Learning" };',
   'function buildFuture(ideas, grit) { return ideas.map(idea => create(idea)); }',
   'document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", run));',
   'const fibonacci = (n) => n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);'
@@ -599,7 +596,7 @@ function renderTypingGame() {
           <span style="color:var(--gold)">${icon('award')}</span>
           <h2>Ajoyib natija!</h2>
           <p style="color:var(--muted-light)">Tezligingiz: <strong>${app.typingWpm} WPM</strong> | Aniqlik: <strong>${app.typingAcc}%</strong></p>
-          <div style="margin:20px 0;color:var(--lime);font-weight:700">+50 XP va +30 Coin hisobingizga qo‘shildi!</div>
+          <div style="margin:20px 0;color:var(--lime);font-weight:700">Personal best: ${formatNumber(app.state.typingRecord?.bestWpm || app.typingWpm)} WPM</div>
           <button class="btn" type="button" data-action="restart-typing">Qayta sinash</button>
         </div>
       ` : `
@@ -624,17 +621,23 @@ function renderTypingGame() {
    SCREEN: REYTING (LEADERBOARD PODIUM & TABLE)
    ========================================================================== */
 function renderLeaderboard() {
-  const users = app.state.adminUsers?.length ? app.state.adminUsers : [
-    { name: 'Muhammadbek Rafiqov', username: 'kembodev', xp: 9480, streak: 12, frame: 'frame-noyob', bg: 'bg-laboratoriya' },
-    { name: 'Jasurbek Developer', username: 'jasur_js', xp: 8120, streak: 7, frame: 'frame-olov', bg: 'bg-shom' },
-    { name: 'Malika Frontend', username: 'malika_code', xp: 7450, streak: 5, frame: 'frame-shafaq', bg: 'bg-konfet' },
-    { name: 'Bekzod Backend', username: 'bekzod_node', xp: 4320, streak: 3, frame: 'frame-okean', bg: 'bg-okean' }
-  ];
+  const users = app.state.leaderboard || [];
 
   const sorted = [...users].sort((a, b) => (b.xp || 0) - (a.xp || 0));
   const top1 = sorted[0];
   const top2 = sorted[1];
   const top3 = sorted[2];
+
+  if (!sorted.length) return `
+    <div class="community-page">
+      <div class="page-heading"><div><p class="eyebrow">COMMUNITY</p><h1>Builder board</h1><p>Real learner progress, ranked by earned XP.</p></div></div>
+      <section class="empty-state leaderboard-empty">
+        <span class="empty-mark">${icon('award')}</span><h2>The board is ready for builders.</h2>
+        <p>Finish a lesson to earn XP and appear here. Only real LumenCo accounts are shown.</p>
+        <button class="btn" type="button" data-action="navigate" data-screen="lessons">Browse lessons ${icon('arrow')}</button>
+      </section>
+    </div>
+  `;
 
   return `
     <div style="max-width:960px;margin:0 auto">
@@ -645,27 +648,29 @@ function renderLeaderboard() {
 
       <!-- Podium -->
       <div class="podium-wrap">
+        ${top2 ? `
         <div class="podium-col second">
           <div class="avatar ${top2?.frame || ''}" style="width:58px;height:58px;margin-bottom:8px">2</div>
-          <strong style="font-size:13px">${escapeHtml(top2?.name || 'Jasurbek')}</strong>
-          <span style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top2?.xp || 8120)} XP</span>
+          <strong style="font-size:13px">${escapeHtml(top2?.name || '')}</strong>
+          <span style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top2?.xp || 0)} XP</span>
           <div class="podium-pedestal">2-O‘rin</div>
-        </div>
+        </div>` : ''}
 
         <div class="podium-col first">
           <span style="color:var(--gold);margin-bottom:4px">${icon('crown')}</span>
-          <div class="avatar ${top1?.frame || 'frame-noyob'}" style="width:72px;height:72px;margin-bottom:8px">MU</div>
-          <strong style="font-size:14px;color:#facc15">${escapeHtml(top1?.name || 'Muhammadbek Rafiqov')}</strong>
-          <span style="color:var(--gold);font-weight:800;font-size:13px;margin-bottom:8px">${formatNumber(top1?.xp || 9480)} XP</span>
+          <div class="avatar ${top1?.frame || ''}" style="width:72px;height:72px;margin-bottom:8px">${escapeHtml(String(top1?.name || '').slice(0, 1).toUpperCase())}</div>
+          <strong style="font-size:14px;color:#facc15">${escapeHtml(top1?.name || '')}</strong>
+          <span style="color:var(--gold);font-weight:800;font-size:13px;margin-bottom:8px">${formatNumber(top1?.xp || 0)} XP</span>
           <div class="podium-pedestal">1-O‘rin</div>
         </div>
 
+        ${top3 ? `
         <div class="podium-col third">
           <div class="avatar ${top3?.frame || ''}" style="width:54px;height:54px;margin-bottom:8px">3</div>
-          <strong style="font-size:13px">${escapeHtml(top3?.name || 'Malika')}</strong>
-          <span style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top3?.xp || 7450)} XP</span>
+          <strong style="font-size:13px">${escapeHtml(top3?.name || '')}</strong>
+          <span style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:8px">${formatNumber(top3?.xp || 0)} XP</span>
           <div class="podium-pedestal">3-O‘rin</div>
-        </div>
+        </div>` : ''}
       </div>
 
       <!-- Table -->
@@ -675,7 +680,7 @@ function renderLeaderboard() {
             <tr style="border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase">
               <th style="padding:14px 18px;text-align:left"># O‘rin</th>
               <th style="padding:14px 18px;text-align:left">Dasturchi</th>
-              <th style="padding:14px 18px;text-align:left">Streak</th>
+              <th style="padding:14px 18px;text-align:left">Plan</th>
               <th style="padding:14px 18px;text-align:right">XP Balli</th>
             </tr>
           </thead>
@@ -685,14 +690,14 @@ function renderLeaderboard() {
                 <td style="padding:14px 18px;font-weight:800;color:var(--cyan)">#${i + 1}</td>
                 <td style="padding:14px 18px">
                   <div style="display:flex;align-items:center;gap:12px">
-                    <div class="avatar ${u.frame || ''}" style="width:34px;height:34px;font-size:12px">MU</div>
+                    <div class="avatar ${escapeHtml(u.frame || '')}" style="width:34px;height:34px;font-size:12px">${escapeHtml(String(u.name || 'B').slice(0, 1).toUpperCase())}</div>
                     <div>
                       <strong>${escapeHtml(u.name)}</strong>
                       <small style="color:var(--muted);display:block">@${escapeHtml(u.username)}</small>
                     </div>
                   </div>
                 </td>
-                <td style="padding:14px 18px;color:var(--orange);font-weight:700">🔥 ${u.streak || 1}</td>
+                <td style="padding:14px 18px;color:var(--muted-light);font-weight:700;text-transform:capitalize">${escapeHtml(u.plan || 'free')}</td>
                 <td style="padding:14px 18px;text-align:right;font-weight:800;color:#ffffff">${formatNumber(u.xp || 0)} XP</td>
               </tr>
             `).join('')}
@@ -709,7 +714,11 @@ function renderLeaderboard() {
 function renderShop() {
   const profile = app.state.profile;
   const items = app.state.shopItems || [];
-  const filtered = items.filter((it) => it.kind === app.shopFilter);
+  const filtered = app.shopFilter === 'all' ? items : items.filter((it) => it.kind === app.shopFilter);
+  const filters = [
+    ['all', 'Everything'], ['frame', 'Frames'], ['bg', 'Profile backgrounds'],
+    ['theme', 'Editor themes'], ['avatar', 'Avatars'], ['tag', 'Name tags'], ['pet', 'Pet items']
+  ].filter(([kind]) => kind === 'all' || items.some((item) => item.kind === kind));
 
   const activeFrame = app.hoveredShopItem?.kind === 'frame' ? app.hoveredShopItem.id : (profile.frameItem || 'frame-yalpiz');
   const activeBg = app.hoveredShopItem?.kind === 'bg' ? app.hoveredShopItem.id : (profile.bgItem || 'bg-yalpiz');
@@ -725,23 +734,23 @@ function renderShop() {
         </div>
 
         <div class="filter-tabs">
-          <button class="filter-tab-btn ${app.shopFilter === 'frame' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="frame">Animatsiyali ramkalar</button>
-          <button class="filter-tab-btn ${app.shopFilter === 'bg' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="bg">Fonlar</button>
-          <button class="filter-tab-btn ${app.shopFilter === 'theme' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="theme">Muharrir temalari</button>
-          <button class="filter-tab-btn ${app.shopFilter === 'avatar' ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="avatar">Avatarlar</button>
+          ${filters.map(([kind, label]) => `<button class="filter-tab-btn ${app.shopFilter === kind ? 'active' : ''}" type="button" data-action="shop-filter" data-filter="${kind}">${label}</button>`).join('')}
         </div>
 
         <div class="shop-grid">
           ${filtered.map((item) => {
             const owned = app.state.inventory?.includes(item.id);
-            const isEquipped = profile.frameItem === item.id || profile.bgItem === item.id || profile.themeItem === item.id;
+            const isEquipped = [profile.frameItem, profile.bgItem, profile.themeItem, profile.avatarItem, profile.tagItem].includes(item.id)
+              || (item.id === 'pet-wizard' && profile.petConfig?.hat === 'wizard')
+              || (item.id === 'pet-vr' && profile.petConfig?.glasses === 'vr')
+              || (item.id === 'pet-crown' && profile.petConfig?.hat === 'crown');
 
             return `
               <div class="shop-item-card" data-action="hover-shop-item" data-item-id="${escapeHtml(item.id)}">
                 <div class="shop-item-preview-box ${item.kind === 'bg' ? item.id : ''}">
                   <div style="width:85%;height:36px;border-radius:8px;background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:11px" class="${item.kind === 'frame' ? item.id : ''}">
-                    <span>1 Ism</span>
-                    <span style="color:var(--muted)">9 480</span>
+                  <span>${escapeHtml(profile.name)}</span>
+                  <span style="color:var(--muted)">${formatNumber(app.state.xp || 0)} XP</span>
                   </div>
                 </div>
                 <strong style="color:#ffffff;font-size:14px;margin-bottom:4px">${escapeHtml(item.name)}</strong>
@@ -757,7 +766,7 @@ function renderShop() {
                   </button>
                 ` : `
                   <button class="btn" style="width:100%" type="button" data-action="buy-item" data-item-id="${escapeHtml(item.id)}">
-                    🪙 ${formatNumber(item.price)} coin
+                    ${icon('gem')} ${formatNumber(item.price)} coin
                   </button>
                 `}
               </div>
@@ -772,7 +781,7 @@ function renderShop() {
           PROFILINGIZDA KO‘RINIShI
         </div>
         <div style="padding:16px;border-radius:12px;display:flex;align-items:center;gap:12px;margin-bottom:20px;border:1px solid var(--border)" class="${activeBg} ${activeFrame}">
-          <div class="avatar" style="width:48px;height:48px;font-size:18px">MU</div>
+          <div class="avatar" style="width:48px;height:48px;font-size:18px">${escapeHtml(String(profile.name || 'B').split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase())}</div>
           <div>
             <strong style="display:block;color:#ffffff">${escapeHtml(profile.name)}</strong>
             <small style="color:var(--muted-light)">@${escapeHtml(profile.username)}</small>
@@ -787,11 +796,11 @@ function renderShop() {
             <span style="font-weight:800;color:var(--cyan)">#1</span>
             <span>${escapeHtml(profile.name)}</span>
           </div>
-          <strong>${formatNumber(app.state.codeScore || 9480)}</strong>
+          <strong>${formatNumber(app.state.codeScore || 0)}</strong>
         </div>
 
         <p style="font-size:11px;color:var(--muted);line-height:1.5;margin:0;border-top:1px solid var(--border);padding-top:14px">
-          Buyum ustiga olib boring: profilingizda va reytingda qanday ko‘rinishini shu yerda jonli ko‘rasiz.
+          Items are bought with coins earned from lessons. Previews show how your profile can look.
         </p>
       </aside>
     </div>
@@ -808,18 +817,18 @@ function renderPlans() {
     <div style="max-width:1050px;margin:0 auto">
       <div class="page-heading" style="text-align:center;display:block">
         <h1>Obuna Ta’riflari (Plans)</h1>
-        <p>LumenCo imkoniyatlarini kengaytiring va sun‘iy intellekt ustozi yordamida o‘rganing.</p>
+        <p>Choose how far to take your learning path. Paid plans use coins earned from lessons; coins have no cash value.</p>
       </div>
 
       <div class="plans-grid">
         <!-- Free -->
         <div class="plan-card ${currentPlan === 'free' ? 'featured' : ''}">
-          <h3>Free (Boshlang‘ich)</h3>
-          <p style="color:var(--muted);font-size:13px">Dasturlashni endi boshlayotganlar uchun.</p>
-          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">0 so‘m</div>
-          <div style="color:var(--muted);font-size:12px;margin-bottom:20px">Umrbod bepul</div>
+          <h3>Free</h3>
+          <p style="color:var(--muted);font-size:13px">A calm place to learn the foundations.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">Free</div>
+          <div style="color:var(--muted);font-size:12px;margin-bottom:20px">No expiry</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
-            <li><span style="color:var(--lime);font-weight:800">✓</span> 20 ta dars (Medium daraja)</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> 20 medium lessons</li>
             <li><span style="color:var(--lime);font-weight:800">✓</span> Oddiy profil foni va shablonlar</li>
             <li><span style="color:var(--lime);font-weight:800">✓</span> Asosiy brauzer kompilyatori</li>
             <li><span style="color:var(--lime);font-weight:800">✓</span> Loyihalar yaratish</li>
@@ -827,48 +836,47 @@ function renderPlans() {
           ${currentPlan === 'free' ? `
             <button class="btn btn-secondary" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="btn btn-secondary" type="button" data-action="select-plan" data-plan="free">Tanlash</button>
+            <button class="btn btn-secondary" type="button" disabled>Free is always available</button>
           `}
         </div>
 
         <!-- Pro -->
         <div class="plan-card ${currentPlan === 'pro' ? 'featured' : ''}">
-          <h3>Pro (Kuchli O‘sish)</h3>
-          <p style="color:var(--muted);font-size:13px">O‘rta va mustahkam bilim oluvchilar uchun.</p>
-          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">79 000 so‘m</div>
-          <div style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:20px">yoki 500 coin bilan / oy</div>
+          <h3>Pro</h3>
+          <p style="color:var(--muted);font-size:13px">More room for solid practice.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">900 coins</div>
+          <div style="color:var(--cyan);font-weight:700;font-size:12px;margin-bottom:20px">30 days · earned in LumenCo</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>100 ta dars</strong> (Medium Solid -&gt; High)</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>AI Pet ustozi Lumi</strong> yordami</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> Animatsiyali ramkalar va fonlar ochiq</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>2x XP va Coin</strong> mukofotlari</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> Barcha muharrir temalari</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Lessons 1–100, from medium to solid practice</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Lumi learning prompts and progress hints</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Animated frames and profile backgrounds</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> 30-day access, renewed with coins</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Full editor theme collection</li>
           </ul>
           ${currentPlan === 'pro' ? `
             <button class="btn" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="btn" type="button" data-action="select-plan" data-plan="pro">Faollashtirish (500 Coin)</button>
+            <button class="btn" type="button" data-action="select-plan" data-plan="pro">Activate · 900 coins</button>
           `}
         </div>
 
         <!-- Max -->
         <div class="plan-card max ${currentPlan === 'max' ? 'featured' : ''}">
-          <h3>Max (To‘liq AI &amp; Fullstack)</h3>
-          <p style="color:var(--muted);font-size:13px">Katta tizimlar, AI va Fullstack arxitektura.</p>
-          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">149 000 so‘m</div>
-          <div style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:20px">yoki 1 200 coin bilan / oy</div>
+          <h3>Max</h3>
+          <p style="color:var(--muted);font-size:13px">Advanced tracks for bigger projects.</p>
+          <div style="font-size:30px;font-weight:900;color:#ffffff;margin:14px 0 6px">3,000 coins</div>
+          <div style="color:var(--orange);font-weight:700;font-size:12px;margin-bottom:20px">30 days · earned in LumenCo</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>350 ta to‘liq dars</strong> (AI, Neyrotarmoqlar, Fullstack)</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>To‘liq AI Ustoz</strong>: kodingizni tekshirib yo‘naltiradi</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>Pet Garderobi</strong>: Lumi ko‘rinishini sozlash</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>Noyob VIP sariq-qora ramka</strong> va Laboratoriya foni</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> <strong>3x XP va Coin</strong> mukofotlari</li>
-            <li><span style="color:var(--lime);font-weight:800">✓</span> Cheksiz loyihalar va ustuvor server tezligi</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> All 350 lessons: AI, data, backend, and security</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> AI and full-stack lesson paths with project exercises</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Customize Lumi’s name and color</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> 30-day access, renewed with coins</li>
+            <li><span style="color:var(--lime);font-weight:800">✓</span> Up to 100 projects and advanced architecture practice</li>
           </ul>
           ${currentPlan === 'max' ? `
             <button class="btn" style="background:var(--orange)" disabled>Amaldagi tarif</button>
           ` : `
-            <button class="btn" style="background:var(--orange)" type="button" data-action="select-plan" data-plan="max">Faollashtirish (1200 Coin)</button>
+            <button class="btn" style="background:var(--orange)" type="button" data-action="select-plan" data-plan="max">Activate · 3,000 coins</button>
           `}
         </div>
       </div>
@@ -877,7 +885,7 @@ function renderPlans() {
 }
 
 /* ==========================================================================
-   SCREEN: ADMIN PANEL (FOR MUHAMMADBEK RAFIQOV / @KEMBODEV)
+   SCREEN: ADMIN PANEL
    ========================================================================== */
 function renderAdmin() {
   const users = app.state.adminUsers || [];
@@ -887,7 +895,7 @@ function renderAdmin() {
       <div class="page-heading">
         <div>
           <h1>LumenCo Admin Panel</h1>
-          <p>Tizim boshqaruvi. Mas’ul: <strong>Muhammadbek Rafiqov (@kembodev)</strong></p>
+          <p>Manage real accounts, plans, and moderation from the database.</p>
         </div>
       </div>
 
@@ -898,7 +906,7 @@ function renderAdmin() {
         </div>
         <div class="stat-card">
           <span class="stat-icon lime">${icon('gem')}</span>
-          <div><span>Faol Tariflar</span><strong>Max (2) · Pro (2)</strong></div>
+          <div><span>Pro / Max plans</span><strong>${users.filter((u) => u.plan === 'pro').length} / ${users.filter((u) => u.plan === 'max').length}</strong></div>
         </div>
         <div class="stat-card">
           <span class="stat-icon orange">${icon('shield')}</span>
@@ -906,7 +914,7 @@ function renderAdmin() {
         </div>
         <div class="stat-card">
           <span class="stat-icon purple">${icon('bolt')}</span>
-          <div><span>Server Holati</span><strong style="color:var(--lime)">Online</strong></div>
+          <div><span>Accounts</span><strong style="color:var(--lime)">${users.length}</strong></div>
         </div>
       </div>
 
@@ -923,7 +931,7 @@ function renderAdmin() {
             </tr>
           </thead>
           <tbody>
-            ${users.map((u) => `
+            ${users.length ? users.map((u) => `
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:14px 18px">
                   <strong>${escapeHtml(u.name)}</strong>
@@ -947,7 +955,7 @@ function renderAdmin() {
                 </td>
                 <td style="padding:14px 18px;text-align:right">
                   <div style="display:inline-flex;gap:6px">
-                    <button class="${u.isBanned ? 'btn btn-secondary' : 'btn btn-danger'}" style="height:32px;padding:0 10px;font-size:11px" type="button" data-action="admin-toggle-ban" data-user-id="${escapeHtml(u.id)}">
+                    <button class="${u.isBanned ? 'btn btn-secondary' : 'btn btn-danger'}" style="height:32px;padding:0 10px;font-size:11px" type="button" data-action="admin-toggle-ban" data-user-id="${escapeHtml(u.id)}" data-is-banned="${u.isBanned ? 'false' : 'true'}">
                       ${u.isBanned ? 'Blokdan chiqarish' : 'Ban qilish'}
                     </button>
                     <button class="btn btn-secondary" style="height:32px;padding:0 10px;font-size:11px" type="button" data-action="admin-give-coins" data-user-id="${escapeHtml(u.id)}">
@@ -956,7 +964,7 @@ function renderAdmin() {
                   </div>
                 </td>
               </tr>
-            `).join('')}
+            `).join('') : `<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted-light)">No accounts yet. New verified accounts will appear here.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -969,6 +977,7 @@ function renderAdmin() {
    ========================================================================== */
 function renderLessons() {
   const lessons = app.state.lessons || [];
+  const lessonLimit = app.state.profile.plan === 'max' || app.state.profile.role === 'admin' ? 350 : app.state.profile.plan === 'pro' ? 100 : 20;
   const tracks = ['Barchasi', ...new Set(lessons.map((l) => l.track))];
   const filtered = lessons.filter((l) => app.lessonFilter === 'Barchasi' || l.track === app.lessonFilter);
 
@@ -992,20 +1001,21 @@ function renderLessons() {
       <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
         ${filtered.map((l) => {
           const completed = app.state.completedLessons?.includes(l.id);
+          const locked = Number(l.index || 0) > lessonLimit;
           return `
-            <div class="panel" style="display:flex;flex-direction:column;justify-content:space-between">
+            <div class="panel lesson-card ${locked ? 'lesson-locked' : ''}" style="display:flex;flex-direction:column;justify-content:space-between">
               <div>
                 <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:11px;font-weight:700">
                   <span style="color:var(--cyan)">${escapeHtml(l.track)}</span>
                   <span style="color:var(--muted)">${escapeHtml(l.level)}</span>
                 </div>
                 <h3 style="margin:0 0 8px;font-size:15px">${escapeHtml(l.title)}</h3>
-                <div style="font-size:12px;color:var(--muted)">⏱️ ${escapeHtml(l.duration)} · +${l.xp} XP</div>
+                <div class="lesson-meta">${icon('clock')} ${escapeHtml(l.duration)} · +${l.xp} XP</div>
               </div>
               <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
                 <span style="color:var(--gold);font-weight:700">+${l.coins} coin</span>
-                <button class="btn ${completed ? 'btn-secondary' : ''}" style="height:32px;font-size:11px" type="button" data-action="open-lesson" data-lesson-id="${escapeHtml(l.id)}">
-                  ${completed ? '✓ Bajarildi' : 'Boshlash'}
+                <button class="btn ${completed || locked ? 'btn-secondary' : ''}" style="height:32px;font-size:11px" type="button" data-action="${locked ? 'navigate' : 'open-lesson'}" ${locked ? 'data-screen="plans"' : `data-lesson-id="${escapeHtml(l.id)}"`}>
+                  ${locked ? 'Unlock with a plan' : completed ? '✓ Completed' : 'Start lesson'}
                 </button>
               </div>
             </div>
@@ -1032,10 +1042,11 @@ function renderProfile() {
       </div>
 
       <div class="panel ${profile.bgItem || ''} ${profile.frameItem || ''}" style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
-        <div class="avatar" style="width:70px;height:70px;font-size:24px">MU</div>
+        <div class="avatar" style="width:70px;height:70px;font-size:24px">${escapeHtml(String(profile.name || 'B').split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase())}</div>
         <div>
           <h2 style="margin:0 0 4px">${escapeHtml(profile.name)}</h2>
           <div style="color:var(--cyan);font-weight:700">@${escapeHtml(profile.username)} · ${escapeHtml(profile.role.toUpperCase())}</div>
+          ${profile.tagItem ? `<span class="profile-name-tag">${escapeHtml(app.state.shopItems?.find((item) => item.id === profile.tagItem)?.name || '')}</span>` : ''}
           <p style="color:var(--muted-light);margin:6px 0 0;font-size:13px">${escapeHtml(profile.bio || 'LumenCo dasturchisi')}</p>
         </div>
       </div>
@@ -1075,10 +1086,9 @@ function render() {
     appRoot.innerHTML = `
       <main style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px">
         <div class="panel" style="max-width:440px;border-color:var(--danger)">
-          <div style="font-size:48px;margin-bottom:12px;color:var(--danger)">🚫</div>
+          <div class="restricted-mark">${icon('shield')}</div>
           <h2 style="margin:0 0 8px;color:#ffffff">Hisobingiz Cheklangan</h2>
           <p style="color:var(--muted-light);margin-bottom:20px">Qoidabuzarlik yoki tekshiruv sababli ma’muriyat tomonidan hisobingiz bloklangan.</p>
-          <button class="btn" type="button" data-action="unban-self-test">Blokdan chiqarish (Test)</button>
         </div>
       </main>
     `;
@@ -1100,8 +1110,12 @@ function render() {
   }
 
   renderShell(content);
+  mountProjectPreviews();
 
-  if (app.screen === 'compiler') runCompilerCode();
+  if (app.screen === 'compiler') {
+    const frame = document.getElementById('compiler-preview-frame');
+    frame?.addEventListener('load', runCompilerCode, { once: true });
+  }
 
   if (app.screen === 'typing' && !app.typingFinished) {
     const input = document.getElementById('typing-hidden-input');
@@ -1110,6 +1124,16 @@ function render() {
       input.oninput = handleTypingInput;
     }
   }
+}
+
+function mountProjectPreviews() {
+  document.querySelectorAll('iframe[data-project-preview]').forEach((frame) => {
+    const project = app.state?.projects?.find((item) => item.id === frame.dataset.projectPreview);
+    if (!project) return;
+    frame.addEventListener('load', () => {
+      frame.contentWindow?.postMessage({ type: 'lumenco:project-preview', files: project.files }, '*');
+    }, { once: true });
+  });
 }
 
 function handleTypingInput(e) {
@@ -1172,7 +1196,7 @@ async function finishTypingGame() {
       method: 'POST',
       body: JSON.stringify({ wpm: app.typingWpm, accuracy: app.typingAcc })
     });
-    toast('Tabriklaymiz! +50 XP va +30 Coin hisobingizga qo‘shildi!');
+    toast('Mashq saqlandi. Darslar XP va coin beradi.');
   } catch (err) {
     toast(err.message, 'error');
   }
@@ -1198,6 +1222,37 @@ function modalFrame(title, description, body, actions) {
       </section>
     </div>
   `;
+}
+
+const LESSON_GUIDES = {
+  1: ['Use HTML landmarks to describe a page structure.', 'Create a document with a header, main area, and one clear heading.', '<main>\n  <h1>My first page</h1>\n  <p>A short introduction.</p>\n</main>'],
+  2: ['Build a clear reading order with headings and links.', 'Add a short section with a heading, paragraph, and a useful link.', '<section>\n  <h2>About this project</h2>\n  <p>Explain what it does.</p>\n  <a href="#work">See the work</a>\n</section>'],
+  3: ['Give images meaningful alternatives for screen readers.', 'Add an image with useful alt text; use empty alt only when the image is decorative.', '<img src="assets/photo.jpg" alt="A short description of the image">'],
+  4: ['Choose lists and tables based on the information they represent.', 'Show three tasks as a list. Use a table only if each value belongs to a row and column.', '<ul>\n  <li>Plan the page</li>\n  <li>Build the layout</li>\n  <li>Check it on mobile</li>\n</ul>'],
+  5: ['Connect form labels to their controls and browser validation.', 'Build a small contact form with a label, email input, and required state.', '<label for="email">Email</label>\n<input id="email" name="email" type="email" required>'],
+  6: ['Use header, main, and footer to make a page easier to navigate.', 'Move your page content into semantic landmarks and keep one main region.', '<header>Site name</header>\n<main>Page content</main>\n<footer>Contact details</footer>'],
+  7: ['Write document metadata that describes the page.', 'Set a specific page title and a short description in the document head.', '<title>Project name — short purpose</title>'],
+  8: ['Use selectors that match a component’s role.', 'Style a button through a class instead of selecting every button globally.', '.primary-action {\n  background: #c2e58c;\n  color: #172019;\n}'],
+  9: ['Predict an element’s total size with the CSS box model.', 'Add padding and border to a card, then compare content-box and border-box.', '* { box-sizing: border-box; }'],
+  10: ['Create a readable type scale and comfortable line length.', 'Set a base font size, heading scale, and paragraph line height.', 'body { line-height: 1.6; }\nh1 { font-size: clamp(2rem, 5vw, 3.5rem); }'],
+  11: ['Arrange related elements in a row or column with Flexbox.', 'Build a navigation row that wraps cleanly on narrow screens.', '.nav { display: flex; gap: 1rem; flex-wrap: wrap; }'],
+  12: ['Align items along the main and cross axes.', 'Center an icon and label inside a button, then test a long label.', '.button { display: flex; align-items: center; gap: .6rem; }'],
+  13: ['Use CSS Grid for two-dimensional page layouts.', 'Create a responsive card grid with columns that fit the available width.', '.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }'],
+  14: ['Name grid areas to keep a dashboard layout understandable.', 'Create a sidebar and content area, then stack them on mobile.', '.layout { display: grid; grid-template-columns: 15rem 1fr; }'],
+  15: ['Store repeated colors and spacing in custom properties.', 'Replace two repeated color values with a shared design token.', ':root { --accent: #c2e58c; }\n.button { background: var(--accent); }'],
+  16: ['Use shadows and gradients to show depth with restraint.', 'Add one surface shadow and check that text contrast stays clear.', '.card { box-shadow: 0 12px 30px rgba(0, 0, 0, .16); }'],
+  17: ['Make hover and keyboard focus states visible.', 'Add a hover color and a clear focus outline to one interactive control.', ':focus-visible { outline: 3px solid #92d9b3; outline-offset: 3px; }'],
+  18: ['Adapt content for a narrow viewport.', 'Check the layout at phone width and change columns only when the content needs it.', '@media (max-width: 640px) {\n  .layout { grid-template-columns: 1fr; }\n}'],
+  19: ['Start with a useful mobile layout and add room for larger screens.', 'Build a one-column card layout first, then add a wider breakpoint.', '/* Base styles first; add a breakpoint only when needed. */'],
+  20: ['Combine structure, layout, and responsive behavior into a finished page.', 'Ship one portfolio page with an introduction, selected work, and a contact path.', '<main>\n  <section aria-labelledby="intro-title">\n    <h1 id="intro-title">Your name</h1>\n  </section>\n</main>']
+};
+
+function lessonGuide(lesson) {
+  return LESSON_GUIDES[Number(lesson.index)] || [
+    `Practice ${lesson.title} in a small project you can explain.`,
+    'Create a focused example, check one edge case, and write down why the structure works.',
+    `// Practice: ${lesson.title}\n// Build the smallest working example, then improve it.`
+  ];
 }
 
 function renderModal() {
@@ -1252,7 +1307,7 @@ function renderModal() {
     const pet = app.state.profile.petConfig || {};
     modalRoot.innerHTML = modalFrame(
       'Lumi Garderobi',
-      'AI ustozi Lumi rangini va aksessuarlarini sozlang.',
+      'Choose a name and color for your learning companion.',
       `
         <form id="pet-wardrobe-form" data-form="pet-wardrobe">
           <div class="field">
@@ -1279,18 +1334,16 @@ function renderModal() {
     const lesson = app.state.lessons?.find((l) => l.id === app.modalLessonId);
     if (!lesson) return;
     const completed = app.state.completedLessons?.includes(lesson.id);
+    const [goal, task, example] = lessonGuide(lesson);
 
     modalRoot.innerHTML = modalFrame(
       escapeHtml(lesson.title),
       `${escapeHtml(lesson.track)} · ${escapeHtml(lesson.level)} · ${escapeHtml(lesson.duration)}`,
       `
         <div style="font-size:13px;line-height:1.6;color:var(--ink-secondary)">
-          <p>Ushbu darsda siz <strong>${escapeHtml(lesson.title)}</strong> mavzusini amaliy tarzda o‘rganasiz.</p>
-          <div style="background:#090d16;border:1px solid var(--border);border-radius:10px;padding:16px;margin:16px 0;font-family:var(--font-mono);font-size:12px;color:var(--cyan)">
-            // Mavzu kodi<br>
-            const lesson = "${escapeHtml(lesson.title)}";<br>
-            console.log("Muvaffaqiyatli yakunlandi!");
-          </div>
+          <h3>Learning goal</h3><p>${escapeHtml(goal)}</p>
+          <h3>Try it in your project</h3><p>${escapeHtml(task)}</p>
+          <pre style="white-space:pre-wrap;background:#0d1511;border:1px solid var(--border);border-radius:10px;padding:16px;margin:16px 0;font-family:var(--mono);font-size:12px;color:var(--cyan)"><code>${escapeHtml(example)}</code></pre>
           <div style="padding:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;color:var(--gold);font-weight:700">
             Mukofot: +${lesson.xp} XP · +${lesson.coins} Coin
           </div>
@@ -1314,6 +1367,10 @@ async function handleClick(e) {
   if (!btn) return;
   const action = btn.dataset.action;
 
+  if (action === 'toggle-auth-mode') {
+    app.authMode = app.authMode === 'signup' ? 'signin' : 'signup';
+    return renderAuth();
+  }
   if (action === 'navigate') return navigate(btn.dataset.screen);
   if (action === 'toggle-fullscreen') return toggleFullscreen();
   if (action === 'close-modal' || (action === 'backdrop-close' && e.target === btn)) return closeModal();
@@ -1347,7 +1404,7 @@ async function handleClick(e) {
       app.state = await request('/api/shop/purchase', { method: 'POST', body: JSON.stringify({ itemId: btn.dataset.itemId }) });
       toast('Bezak xarid qilindi!');
       render();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) { toast(LumenI18n.translateText(err.message, app.locale), 'error'); }
     return;
   }
   if (action === 'equip-item') {
@@ -1355,7 +1412,7 @@ async function handleClick(e) {
       app.state = await request('/api/profile/equip', { method: 'PATCH', body: JSON.stringify({ itemId: btn.dataset.itemId }) });
       toast('Profil ko‘rinishi yangilandi!');
       render();
-    } catch (err) { toast(err.message, 'error'); }
+    } catch (err) { toast(LumenI18n.translateText(err.message, app.locale), 'error'); }
     return;
   }
   if (action === 'select-plan') {
@@ -1408,7 +1465,7 @@ async function handleClick(e) {
   if (action === 'restart-typing') { initTypingGame(); return render(); }
   if (action === 'admin-toggle-ban') {
     try {
-      app.state = await request('/api/admin/ban', { method: 'POST', body: JSON.stringify({ userId: btn.dataset.userId }) });
+      app.state = await request('/api/admin/ban', { method: 'POST', body: JSON.stringify({ userId: btn.dataset.userId, isBanned: btn.dataset.isBanned === 'true' }) });
       toast('Foydalanuvchi holati yangilandi!');
       render();
     } catch (err) { toast(err.message, 'error'); }
@@ -1422,14 +1479,6 @@ async function handleClick(e) {
     } catch (err) { toast(err.message, 'error'); }
     return;
   }
-  if (action === 'unban-self-test') {
-    try {
-      app.state = await request('/api/admin/ban', { method: 'POST', body: JSON.stringify({ userId: app.state.profile.id }) });
-      toast('Hisob blokdan chiqarildi!');
-      render();
-    } catch (err) { toast(err.message, 'error'); }
-    return;
-  }
 }
 
 async function handleSubmit(e) {
@@ -1438,6 +1487,27 @@ async function handleSubmit(e) {
   e.preventDefault();
   const kind = form.dataset.form;
   const values = new FormData(form);
+
+  if (kind === 'auth-form') {
+    const email = String(values.get('email') || '').trim();
+    const password = String(values.get('password') || '');
+    try {
+      if (app.authMode === 'signup') {
+        await LumenBackend.signUp(email, password);
+      } else {
+        await LumenBackend.signIn(email, password);
+      }
+      app.pendingEmail = email;
+      app.authenticated = true;
+      app.state = await request('/api/state');
+      app.projectId = app.state.projects?.[0]?.id || null;
+      const project = getProject();
+      app.filePath = project ? (Object.keys(project.files).find((pathName) => /index\.html?$/i.test(pathName)) || Object.keys(project.files)[0] || null) : null;
+      render();
+      toast('Welcome to LumenCo.');
+    } catch (err) { toast(LumenI18n.translateText(err.message, app.locale), 'error'); }
+    return;
+  }
 
   if (kind === 'new-project') {
     try {
@@ -1519,8 +1589,13 @@ async function handleChange(e) {
 }
 
 window.addEventListener('message', (e) => {
-  if (e.data?.type === 'compiler-console') {
-    app.compilerConsole.push(e.data.text);
+  const frame = document.getElementById('compiler-preview-frame');
+  if (!frame || e.source !== frame.contentWindow || e.data?.type !== 'compiler-console' || typeof e.data.text !== 'string') return;
+  app.compilerConsole.push(e.data.text.slice(0, 500));
+  if (app.compilerConsole.length > 100) app.compilerConsole.splice(0, app.compilerConsole.length - 100);
+  if (app.compilerTab === 'console') {
+    const output = document.getElementById('compiler-input');
+    if (output) output.value = app.compilerConsole.join('\n');
   }
 });
 
@@ -1531,92 +1606,76 @@ function renderAuth() {
   const isSignup = app.authMode === 'signup';
   appRoot.innerHTML = `
     <main class="auth-page">
-      <section class="auth-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
-          <a class="brand" href="#" style="padding:0">
+      <section class="auth-panel">
+        <div class="auth-content">
+          <header class="auth-header">
+            <a class="brand auth-brand" href="#">
             <span class="brand-mark">L</span>
             <span class="brand-word">LumenCo<small>Build. Keep growing.</small></span>
-          </a>
-          <select class="locale-picker" data-locale-picker>
-            <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option>
+            </a>
+            <select class="locale-picker" data-locale-picker aria-label="Language">
             <option value="en" ${app.locale === 'en' ? 'selected' : ''}>EN</option>
+            <option value="uz" ${app.locale === 'uz' ? 'selected' : ''}>UZ</option>
             <option value="ru" ${app.locale === 'ru' ? 'selected' : ''}>RU</option>
-          </select>
+            </select>
+          </header>
+
+          <div class="auth-form-block">
+            <p class="auth-kicker">${isSignup ? 'YANGI HISOB' : 'LUMENCO’GA XUSH KELIBSIZ'}</p>
+            <h1>${isSignup ? 'Hisob yarating' : 'LumenCo hisobingizga kiring'}</h1>
+            <p class="auth-intro">${isSignup ? 'Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.' : 'Loyihalaringiz va o‘sishingiz bitta joyda.'}</p>
+
+            <form data-form="auth-form">
+              <div class="field">
+                <label>Email manzili</label>
+                <input type="email" name="email" value="${escapeHtml(app.pendingEmail)}" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label>Parol</label>
+                <input type="password" name="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" ${isSignup ? 'minlength="8"' : ''} required />
+              </div>
+              <button class="btn auth-submit" type="submit">
+                <span>${isSignup ? 'Hisob yaratish' : 'Kirish'}</span>${icon('arrow')}
+              </button>
+            </form>
+
+            <p class="auth-switch-row">
+              <span>${isSignup ? 'Hisobingiz bormi?' : 'Hisobingiz yo‘qmi?'}</span>
+              <button type="button" data-action="toggle-auth-mode">${isSignup ? 'Kirish' : 'Ro‘yxatdan o‘tish'}</button>
+            </p>
+
+            <div class="auth-privacy-note">${icon('shield')}<span>Ma’lumotlaringiz xavfsiz saqlanadi. LumenCo loyihalaringizni hisobingiz bilan bog‘laydi.</span></div>
+          </div>
         </div>
-
-        <h1 style="margin:0 0 8px;font-size:26px">${isSignup ? 'Hisob yarating' : 'LumenCo hisobingizga kiring'}</h1>
-        <p style="color:var(--muted-light);margin:0 0 24px">${isSignup ? 'Boshlash bepul. Dasturlashni o‘rganing va loyihalar yarating.' : 'Loyihalaringiz va o‘sishingiz bitta joyda.'}</p>
-
-        <form data-form="auth-form" onsubmit="handleAuthSubmit(event)">
-          ${isSignup ? `
-            <div class="field">
-              <label>Ismingiz</label>
-              <input name="name" required placeholder="Muhammadbek Rafiqov" />
-            </div>
-          ` : ''}
-          <div class="field">
-            <label>Email manzili</label>
-            <input type="email" name="email" value="${escapeHtml(app.pendingEmail)}" required />
-          </div>
-          <div class="field">
-            <label>Parol</label>
-            <input type="password" name="password" minlength="8" required />
-          </div>
-          <button class="btn" style="width:100%;height:42px;margin-top:10px" type="submit">
-            ${isSignup ? 'Hisob yaratish' : 'Kirish'} ➔
-          </button>
-        </form>
-
-        <p style="text-align:center;margin-top:24px;color:var(--muted);font-size:13px">
-          ${isSignup ? 'Hisobingiz bormi?' : 'Hisobingiz yo‘qmi?'}
-          <button style="color:var(--cyan);font-weight:700" type="button" onclick="toggleAuthMode()">
-            ${isSignup ? 'Kirish' : 'Ro‘yxatdan o‘tish'}
-          </button>
-        </p>
       </section>
 
       <aside class="auth-side">
-        <span style="font-size:12px;font-weight:800;letter-spacing:0.12em;color:var(--cyan)">BUILD YOUR NEXT IDEA</span>
-        <h2 style="font-size:clamp(32px, 4vw, 44px);line-height:1.15;margin:16px 0;color:#ffffff">
-          Every line moves you forward.
-        </h2>
-        <p style="color:var(--muted-light);max-width:440px;line-height:1.6">
-          Learn, build and keep your work organized in one calm studio workspace.
-        </p>
+        <div class="auth-side-inner">
+          <div class="auth-side-brand"><span class="brand-mark">L</span><span>LumenCo <small>LEARN · BUILD · GROW</small></span></div>
+          <div class="auth-promo">
+            <p class="auth-kicker">KODDAN G‘OYAGACHA</p>
+            <h2>Har bir qator seni oldinga olib boradi.</h2>
+            <p>O‘rgan, haqiqiy loyihalar yarat va o‘sishingni bir joyda ko‘r.</p>
+            <div class="auth-art" aria-hidden="true">
+              <div class="auth-orbit auth-orbit-one"></div>
+              <div class="auth-orbit auth-orbit-two"></div>
+              <div class="auth-code-window">
+                <div class="auth-window-bar"><span></span><span></span><span></span><b>my-first-project</b></div>
+                <div class="auth-code-lines"><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="auth-code-stamp">${icon('code')}</div>
+              </div>
+              <div class="auth-float-card auth-float-course"><span class="auth-float-icon">${icon('book')}</span><span><b>20 min</b><small>Bir kichik dars</small></span></div>
+              <div class="auth-float-card auth-float-progress"><span class="auth-float-icon">${icon('bolt')}</span><span><b>+50 XP</b><small>O‘sish davom etadi</small></span></div>
+            </div>
+            <div class="auth-feature-row"><span>${icon('code')} O‘rgan</span><span>${icon('folder')} Yarat</span><span>${icon('chart')} O‘s</span></div>
+          </div>
+        </div>
       </aside>
     </main>
   `;
+  appRoot.innerHTML = LumenI18n.translateMarkup(appRoot.innerHTML, app.locale);
+  document.documentElement.lang = app.locale;
 }
-
-window.toggleAuthMode = function() {
-  app.authMode = app.authMode === 'signup' ? 'signin' : 'signup';
-  renderAuth();
-};
-
-window.handleAuthSubmit = async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const values = new FormData(form);
-  const email = String(values.get('email') || '').trim();
-  const password = String(values.get('password') || '');
-  const name = String(values.get('name') || '').trim();
-
-  try {
-    if (app.authMode === 'signup') {
-      const res = await LumenBackend.signUp(email, password, name);
-      if (res.needsEmail) {
-        toast('Emailga tasdiqlash xati yuborildi. Pochtani tekshiring.');
-        return;
-      }
-    } else {
-      await LumenBackend.signIn(email, password);
-    }
-    app.authenticated = true;
-    app.state = await request('/api/state');
-    render();
-    toast('Xush kelibsiz!');
-  } catch (err) { toast(err.message, 'error'); }
-};
 
 /* ==========================================================================
    BOOTSTRAP

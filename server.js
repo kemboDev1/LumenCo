@@ -15,31 +15,71 @@ const MAX_PROJECT_FILES = 200;
 const MAX_PROJECT_FOLDERS = 100;
 const MAX_PROJECT_BYTES = 2_000_000;
 
-const LESSONS = [
-  { id: 'html-structure', title: 'HTML: sahifa skeleti', track: 'HTML asoslari', xp: 50, coins: 80, duration: '12 daqiqa', level: 'Boshlang‘ich' },
-  { id: 'css-layout', title: 'CSS: tartibli joylashuv', track: 'CSS dizayn', xp: 60, coins: 90, duration: '18 daqiqa', level: 'Boshlang‘ich' },
-  { id: 'js-dom', title: 'JavaScript: sahifa bilan ishlash', track: 'JavaScript', xp: 80, coins: 120, duration: '22 daqiqa', level: 'O‘rta' },
-  { id: 'project-structure', title: 'Loyiha papkalarini rejalash', track: 'Kod arxitekturasi', xp: 90, coins: 140, duration: '20 daqiqa', level: 'O‘rta' },
-  { id: 'node-api', title: 'Node.js: birinchi API', track: 'Backend', xp: 110, coins: 170, duration: '28 daqiqa', level: 'O‘rta' },
-  { id: 'git-save', title: 'Git: o‘zgarishlarni saqlash', track: 'Git va jamoa', xp: 70, coins: 100, duration: '15 daqiqa', level: 'Boshlang‘ich' }
+const LESSON_TITLES = {
+  1: 'Build a semantic HTML page', 2: 'Use headings, paragraphs, and links', 3: 'Add images and accessible descriptions',
+  4: 'Organize lists and data tables', 5: 'Create a form with labels and validation',
+  6: 'Structure a page with semantic landmarks', 7: 'Set page metadata and a useful title',
+  8: 'Select elements and apply color tokens', 9: 'Understand the CSS box model', 10: 'Choose readable type and spacing',
+  11: 'Lay out a page with Flexbox', 12: 'Align and distribute interface elements', 13: 'Create a responsive CSS Grid',
+  14: 'Build a dashboard with grid areas', 15: 'Reuse values with CSS custom properties',
+  16: 'Add depth with shadows and gradients', 17: 'Design hover and focus states', 18: 'Adapt a layout for mobile screens',
+  19: 'Plan a mobile-first interface', 20: 'Ship a small portfolio page', 21: 'Animate interface details with keyframes',
+  22: 'Use transforms without breaking layout', 23: 'Build layered surfaces with CSS', 24: 'Compose utility classes consistently',
+  25: 'Use SVG as a crisp interface asset', 35: 'Name components and styles with BEM', 50: 'Ship a responsive landing page',
+  51: 'Use JavaScript values and types', 52: 'Write functions and understand scope', 53: 'Select and update DOM elements',
+  54: 'Handle browser events safely', 55: 'Transform data with array methods', 56: 'Store small preferences in localStorage',
+  65: 'Handle asynchronous work with promises', 70: 'Read JSON from a web API', 75: 'Draw an interactive scene on canvas',
+  80: 'Split code into JavaScript modules', 81: 'Model data with classes and objects', 82: 'Keep each module focused on one job',
+  83: 'Extend behavior without rewriting stable code', 84: 'Use substitutions that preserve behavior',
+  85: 'Keep interfaces small and specific', 86: 'Depend on stable abstractions', 90: 'Choose a pattern for a real problem',
+  95: 'Write focused unit tests', 100: 'Refactor a project into clear layers',
+  101: 'Explain how a language model produces text', 102: 'Write prompts with clear context and output rules',
+  110: 'Classify a small dataset in the browser', 130: 'Retrieve trusted context for a generated answer',
+  150: 'Prepare text data for a language task', 200: 'Design an agent that calls bounded tools',
+  201: 'Trace a Node.js request through the event loop', 210: 'Design a versioned REST API',
+  225: 'Model relational data with PostgreSQL', 250: 'Protect sessions and validate access tokens',
+  280: 'Deliver updates over a WebSocket connection', 310: 'Prevent injection and cross-site attacks',
+  330: 'Package an app and automate delivery', 350: 'Design a resilient full-stack service'
+};
+const LESSON_TRACKS = [
+  { from: 1, to: 20, track: 'Web Foundations', tier: 'free', base: 50, level: 'Medium' },
+  { from: 21, to: 50, track: 'CSS and Interface Design', tier: 'pro', base: 60, level: 'Medium → solid' },
+  { from: 51, to: 80, track: 'JavaScript and Browser APIs', tier: 'pro', base: 80, level: 'Medium → solid' },
+  { from: 81, to: 100, track: 'Clean Code and Architecture', tier: 'pro', base: 100, level: 'Medium → solid' },
+  { from: 101, to: 200, track: 'AI and Machine Learning', tier: 'max', base: 150, level: 'Advanced' },
+  { from: 201, to: 350, track: 'Full-stack Engineering and Security', tier: 'max', base: 200, level: 'Advanced' }
 ];
+const LESSONS = Array.from({ length: 350 }, (_, index) => {
+  const number = index + 1;
+  const track = LESSON_TRACKS.find((item) => number >= item.from && number <= item.to);
+  return {
+    id: `lesson-${number}`, index: number,
+    title: LESSON_TITLES[number] || `${track.track}: practice lab ${number}`,
+    track: track.track, tier: track.tier, level: track.level,
+    xp: track.base + number * 2, coins: track.base,
+    duration: `${15 + (number % 4) * 5} min`
+  };
+});
 
 const SHOP_ITEMS = [
-  { id: 'avatar-comet', name: 'Kometa', category: 'Avatar', kind: 'avatar', price: 260, emoji: '☄️', description: 'Profiling uchun tezkor belgi.' },
-  { id: 'avatar-cobalt', name: 'Kobalt', category: 'Avatar', kind: 'avatar', price: 340, emoji: '🔷', description: 'Sokin rang, dadil ko‘rinish.' },
-  { id: 'tag-clean-code', name: 'Clean coder', category: 'Name tag', kind: 'tag', price: 420, emoji: '✳', description: 'Toza kod tarafdorlari uchun.' },
-  { id: 'tag-night-owl', name: 'Night owl', category: 'Name tag', kind: 'tag', price: 500, emoji: '🌙', description: 'Tunlari kod yozadiganlar uchun.' },
-  { id: 'frame-orbit', name: 'Orbit ramkasi', category: 'Profil ramkasi', kind: 'frame', price: 680, emoji: '◎', description: 'Profil suratiga orbital chiziq.' },
-  { id: 'premium-month', name: 'Lumen Plus · 1 oy', category: 'Obuna', kind: 'subscription', price: 2400, days: 30, emoji: '✦', description: 'Barcha yo‘nalishlar va kengaytirilgan ish maydoni.' },
-  { id: 'premium-season', name: 'Lumen Plus · 3 oy', category: 'Obuna', kind: 'subscription', price: 6200, days: 90, emoji: '✹', description: 'Uch oy davomida barcha Plus imkoniyatlari.' }
+  ...[
+    ['frame-yalpiz','Mint','frame',100],['frame-okean','Ocean','frame',150],['frame-olov','Ember','frame',200],['frame-shafaq','Dusk','frame',250],['frame-kiber','Signal','frame',300],['frame-noyob','Rare','frame',500],
+    ['bg-yalpiz','Mint field','bg',150],['bg-konfet','Soft color','bg',200],['bg-shom','Dusk','bg',250],['bg-okean','Ocean','bg',250],['bg-nuqtalar','Dots','bg',300],['bg-ogohlantirish','Signal','bg',350],['bg-tolqinlar','Waves','bg',400],['bg-laboratoriya','Workshop','bg',500],
+    ['theme-dracula','Dracula','theme',100],['theme-monokai','Monokai','theme',100],['theme-night-owl','Night Owl','theme',120],['theme-cobalt2','Cobalt','theme',150],['theme-claude','Warm dark','theme',150],['theme-nord','Nord','theme',180],['theme-github-dark','GitHub Dark','theme',180],['theme-oceanic','Oceanic','theme',200],
+    ['avatar-cat','Pixel cat','avatar',200],['avatar-ninja','Night runner','avatar',250],['avatar-robot','Workshop robot','avatar',300],
+    ['tag-clean-code','Clean coder','tag',420],['tag-night-owl','Night owl','tag',500],
+    ['pet-wizard','Lumi cap','pet',150],['pet-vr','Lumi headset','pet',150],['pet-crown','Lumi crown','pet',300]
+  ].map(([id, name, kind, price]) => ({ id, name, category: kind, kind, price, emoji: '✦', description: 'A profile item earned with lesson coins.' }))
 ];
 
 function starterProject(template, name) {
+  const title = String(name).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+  const nameLiteral = JSON.stringify(String(name)).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
   if (template === 'portfolio') {
     return {
       folders: ['assets'],
       files: {
-        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${name}</title>\n  <link rel="stylesheet" href="styles.css" />\n</head>\n<body>\n  <main class="card">\n    <p class="eyebrow">MY PORTFOLIO</p>\n    <h1>Hello, I’m Azizbek.</h1>\n    <p>This is my first project page.</p>\n    <a href="#projects">See my projects</a>\n  </main>\n</body>\n</html>\n`,
+        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${title}</title>\n  <link rel="stylesheet" href="styles.css" />\n</head>\n<body>\n  <main class="card">\n    <p class="eyebrow">A WORK IN PROGRESS</p>\n    <h1>Hello, builder.</h1>\n    <p>Write a first section, then make it yours.</p>\n    <a href="#projects">Explore the project</a>\n  </main>\n  <script src="app.js"></script>\n</body>\n</html>\n`,
         'styles.css': `:root { color-scheme: light; font-family: system-ui, sans-serif; }\nbody { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #eff2ff; color: #192239; }\n.card { max-width: 520px; padding: 48px; border-radius: 28px; background: white; box-shadow: 0 24px 70px #24326018; }\n.eyebrow { color: #5867db; font-size: 12px; letter-spacing: .14em; }\nh1 { font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1.06; }\na { color: #3548cb; }\n`,
         'app.js': `const link = document.querySelector('a');\nlink?.addEventListener('click', () => {\n  console.log('Build the next section here.');\n});\n`
       }
@@ -49,8 +89,8 @@ function starterProject(template, name) {
     return {
       folders: ['src', 'src/components', 'src/pages', 'src/utils', 'public'],
       files: {
-        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${name}</title>\n  <link rel="stylesheet" href="src/styles.css" />\n</head>\n<body>\n  <div id="app"></div>\n  <script src="src/main.js"></script>\n</body>\n</html>\n`,
-        'src/main.js': `const root = document.querySelector('#app');\nroot.innerHTML = '<main><h1>${name}</h1><p>Start building your idea here.</p></main>';\n`,
+        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${title}</title>\n  <link rel="stylesheet" href="src/styles.css" />\n</head>\n<body>\n  <div id="app"></div>\n  <script src="src/main.js"></script>\n</body>\n</html>\n`,
+        'src/main.js': `const root = document.querySelector('#app');\nconst heading = document.createElement('h1');\nheading.textContent = ${nameLiteral};\nconst main = document.createElement('main');\nmain.append(heading, Object.assign(document.createElement('p'), { textContent: 'Start building your idea here.' }));\nroot.append(main);\n`,
         'src/styles.css': `:root { font-family: system-ui, sans-serif; color: #192239; background: #eff2ff; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; }\nmain { padding: 48px; border-radius: 24px; background: white; }\n`,
         'README.md': `# ${name}\n\nCreated with LumenCo.\n`
       }
@@ -59,29 +99,22 @@ function starterProject(template, name) {
   return { folders: [], files: { 'README.md': `# ${name}\n\nDescribe your project here.\n` } };
 }
 
-function demoProject(id, name, template, updatedAt) {
-  const starter = starterProject(template, name);
-  return { id, name, template, folders: starter.folders, files: starter.files, createdAt: updatedAt, updatedAt };
-}
-
 function makeInitialState() {
-  const now = new Date().toISOString();
   return {
     profile: {
-      name: 'Azizbek', username: 'aziz.dev', bio: 'Building one step at a time.', avatarItem: null, tagItem: null, frameItem: null
+      id: 'local-builder', name: 'Builder', username: 'builder', bio: '',
+      avatarItem: null, tagItem: null, frameItem: null, bgItem: null, themeItem: null,
+      role: 'user', plan: 'free', isBanned: false, petConfig: { name: 'Lumi', color: 'cyan', hat: 'none', glasses: 'none' }
     },
-    coins: 2100,
-    xp: 320,
-    projects: [
-      demoProject('project-portfolio', 'Personal Portfolio', 'portfolio', now),
-      demoProject('project-habit', 'Habit Tracker', 'webapp', now)
-    ],
-    completedLessons: ['html-structure', 'css-layout'],
+    coins: 0,
+    xp: 0,
+    projects: [],
+    completedLessons: [],
     inventory: [],
     subscription: null,
-    coinLedger: [
-      { id: 'welcome', delta: 2100, reason: 'Welcome to LumenCo', createdAt: now }
-    ]
+    coinLedger: [],
+    leaderboard: [],
+    adminUsers: []
   };
 }
 
@@ -127,10 +160,19 @@ function developerRank(score) {
   return { name: 'Junior', next: 'Junior+', progress: Math.round((score / 28) * 100), subtitle: 'Asoslarni mustahkamlash' };
 }
 
+function activePlan(profile = state.profile) {
+  if (profile.role === 'admin') return 'max';
+  const expires = profile.planExpiresAt ? Date.parse(profile.planExpiresAt) : 0;
+  if (profile.plan && profile.plan !== 'free' && expires > Date.now()) return profile.plan;
+  return 'free';
+}
+
 function publicState() {
   const score = state.projects.reduce((total, project) => total + structureScore(project), 0);
+  const plan = activePlan();
   return {
     ...state,
+    profile: { ...state.profile, plan },
     projects: state.projects.map((project) => ({ ...project, score: Math.round(structureScore(project)) })),
     creatorRank: projectCountRank(state.projects.length),
     developerRank: developerRank(score),
@@ -204,12 +246,17 @@ function sendFile(res, requestPath) {
     if (error) return fail(res, 404, 'Sahifa topilmadi.');
     const extension = path.extname(absolutePath).toLowerCase();
     const contentType = ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon' })[extension] || 'application/octet-stream';
+    const isPreview = relative === 'preview.html';
+    const contentSecurityPolicy = isPreview
+      ? "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"
+      : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jcdxficlsfnrlyrqmisa.supabase.co; frame-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
     res.writeHead(200, {
       'content-type': contentType,
       'cache-control': 'no-cache',
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'same-origin',
-      'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://jcdxficlsfnrlyrqmisa.supabase.co; frame-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
+      'x-frame-options': 'SAMEORIGIN',
+      'content-security-policy': contentSecurityPolicy
     });
     res.end(data);
   });
@@ -239,11 +286,33 @@ async function route(req, res) {
     const item = SHOP_ITEMS.find((candidate) => candidate.id === body.itemId);
     if (!item || item.kind === 'subscription' || !state.inventory.includes(item.id)) return fail(res, 404, 'Bu bezak inventaringizda yo‘q.');
     const profileKey = `${item.kind}Item`;
-    if (!['avatarItem', 'tagItem', 'frameItem'].includes(profileKey)) return fail(res, 400, 'Bu bezakni taqib bo‘lmaydi.');
-    state.profile[profileKey] = item.id;
+    const profileFields = { avatar: 'avatarItem', tag: 'tagItem', frame: 'frameItem', bg: 'bgItem', theme: 'themeItem' };
+    if (item.kind === 'pet') {
+      if (item.id === 'pet-wizard') state.profile.petConfig.hat = 'wizard';
+      if (item.id === 'pet-vr') state.profile.petConfig.glasses = 'vr';
+      if (item.id === 'pet-crown') state.profile.petConfig.hat = 'crown';
+      saveState();
+      return json(res, 200, publicState());
+    }
+    if (!profileFields[item.kind]) return fail(res, 400, 'Bu bezakni taqib bo‘lmaydi.');
+    const targetField = profileFields[item.kind];
+    state.profile[targetField] = item.id;
     saveState();
     return json(res, 200, publicState());
   }
+
+  if (pathname === '/api/pet/customize' && req.method === 'POST') {
+    if (activePlan() !== 'max') return fail(res, 403, 'Lumi’ni sozlash uchun Max rejasi kerak.');
+    const body = await readJson(req);
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const color = ['cyan', 'lime', 'gold', 'purple'].includes(body.color) ? body.color : null;
+    if (name.length < 1 || name.length > 20 || !color) return fail(res, 400, 'Pet nomi yoki rangi noto‘g‘ri.');
+    state.profile.petConfig = { ...state.profile.petConfig, name, color };
+    saveState();
+    return json(res, 200, publicState());
+  }
+
+  if (pathname === '/api/game/record' && req.method === 'POST') return json(res, 200, publicState());
 
   if (pathname === '/api/projects' && req.method === 'POST') {
     const body = await readJson(req);
@@ -338,6 +407,9 @@ async function route(req, res) {
     const lesson = LESSONS.find((item) => item.id === lessonMatch[1]);
     if (!lesson) return fail(res, 404, 'Dars topilmadi.');
     if (state.completedLessons.includes(lesson.id)) return fail(res, 409, 'Bu dars uchun mukofot avval olingan.');
+    const currentPlan = activePlan();
+    const lessonLimit = currentPlan === 'max' ? 350 : currentPlan === 'pro' ? 100 : 20;
+    if (lesson.index > lessonLimit || state.completedLessons.length >= lessonLimit) return fail(res, 403, 'Bu dars tanlagan rejangizda ochilmagan.');
     state.completedLessons.push(lesson.id);
     state.coins += lesson.coins;
     state.xp += lesson.xp;
@@ -353,17 +425,29 @@ async function route(req, res) {
     if (state.coins < item.price) return fail(res, 409, `Bu mahsulot uchun yana ${item.price - state.coins} coin kerak.`);
     if (item.kind !== 'subscription' && state.inventory.includes(item.id)) return fail(res, 409, 'Bu mahsulot profilingizda bor.');
     state.coins -= item.price;
-    if (item.kind === 'subscription') {
-      const currentExpiry = state.subscription?.expiresAt && new Date(state.subscription.expiresAt).getTime() > Date.now()
-        ? new Date(state.subscription.expiresAt).getTime() : Date.now();
-      state.subscription = { itemId: item.id, name: 'Lumen Plus', expiresAt: new Date(currentExpiry + item.days * 86_400_000).toISOString() };
-    } else {
-      state.inventory.push(item.id);
-      if (item.kind === 'avatar') state.profile.avatarItem = item.id;
-      if (item.kind === 'tag') state.profile.tagItem = item.id;
-      if (item.kind === 'frame') state.profile.frameItem = item.id;
-    }
+    state.inventory.push(item.id);
+    if (item.kind === 'avatar') state.profile.avatarItem = item.id;
+    if (item.kind === 'tag') state.profile.tagItem = item.id;
+    if (item.kind === 'frame') state.profile.frameItem = item.id;
+    if (item.kind === 'bg') state.profile.bgItem = item.id;
+    if (item.kind === 'theme') state.profile.themeItem = item.id;
     state.coinLedger.unshift({ id: crypto.randomUUID(), delta: -item.price, reason: `Do‘kon: ${item.name}`, createdAt: new Date().toISOString() });
+    saveState();
+    return json(res, 200, publicState());
+  }
+
+  if (pathname === '/api/plans/select' && req.method === 'POST') {
+    const plan = body.plan;
+    const price = plan === 'pro' ? 900 : plan === 'max' ? 3000 : null;
+    if (!price) return fail(res, 400, 'Paid plan tanlang.');
+    if (state.coins < price) return fail(res, 409, `Obunani faollashtirish uchun yana ${price - state.coins} coin kerak.`);
+    const currentExpiry = state.profile.planExpiresAt && Date.parse(state.profile.planExpiresAt) > Date.now()
+      ? Date.parse(state.profile.planExpiresAt) : Date.now();
+    state.coins -= price;
+    state.profile.plan = plan;
+    state.profile.planExpiresAt = new Date(currentExpiry + 30 * 86_400_000).toISOString();
+    state.subscription = { itemId: `plan-${plan}`, name: `Lumen ${plan.toUpperCase()}`, expiresAt: state.profile.planExpiresAt };
+    state.coinLedger.unshift({ id: crypto.randomUUID(), delta: -price, reason: `Plan: ${plan}`, createdAt: new Date().toISOString() });
     saveState();
     return json(res, 200, publicState());
   }

@@ -129,19 +129,21 @@
   function bytes(value) { return new TextEncoder().encode(String(value ?? '')).length; }
 
   function starterProject(template, name) {
+    const title = String(name).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+    const nameLiteral = JSON.stringify(String(name)).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
     if (template === 'portfolio') return {
       folders: ['assets'],
       files: {
-        'index.html': `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${name}</title>\n  <link rel="stylesheet" href="styles.css" />\n</head>\n<body>\n  <main class="card">\n    <p class="eyebrow">PORTFOLIO</p>\n    <h1>Salom, men Muhammadbekman.</h1>\n    <p>Bu mening yangi dasturlash loyiham.</p>\n    <a href="#projects">Loyihalarimni ko‘rish</a>\n  </main>\n  <script src="app.js"></script>\n</body>\n</html>\n`,
+        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${title}</title>\n  <link rel="stylesheet" href="styles.css" />\n</head>\n<body>\n  <main class="card">\n    <p class="eyebrow">A WORK IN PROGRESS</p>\n    <h1>Hello, builder.</h1>\n    <p>Write a first section, then make it yours.</p>\n    <a href="#projects">Explore the project</a>\n  </main>\n  <script src="app.js"></script>\n</body>\n</html>\n`,
         'styles.css': `:root { color-scheme: dark; font-family: system-ui, sans-serif; }\nbody { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #0c101b; color: #f1f5f9; }\n.card { max-width: 520px; padding: 48px; border-radius: 24px; background: #151c2e; border: 1px solid #283553; box-shadow: 0 24px 70px rgba(0,0,0,.5); text-align: center; }\n.eyebrow { color: #38bdf8; font-size: 12px; letter-spacing: .14em; font-weight: 700; }\nh1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 12px 0; }\na { display: inline-block; margin-top: 18px; padding: 10px 22px; border-radius: 12px; background: #38bdf8; color: #0f172a; text-decoration: none; font-weight: 700; }\n`,
-        'app.js': `console.log('LumenCo loyihasi muvaffaqiyatli ishga tushdi!');\nconst link = document.querySelector('a');\nlink?.addEventListener('click', (e) => {\n  e.preventDefault();\n  alert('Yangi bo‘limlarni o‘zingiz kodlab qo‘shing!');\n});\n`
+        'app.js': `console.log('LumenCo project preview is running.');\nconst link = document.querySelector('a');\nlink?.addEventListener('click', (event) => {\n  event.preventDefault();\n  const note = document.createElement('p');\n  note.textContent = 'Add your next section here.';\n  document.querySelector('main')?.append(note);\n});\n`
       }
     };
     if (template === 'webapp') return {
       folders: ['src', 'src/components', 'src/pages', 'src/utils', 'public'],
       files: {
-        'index.html': `<!doctype html>\n<html lang="uz">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${name}</title>\n  <link rel="stylesheet" href="src/styles.css" />\n</head>\n<body>\n  <div id="app"></div>\n  <script src="src/main.js"></script>\n</body>\n</html>\n`,
-        'src/main.js': `const root = document.querySelector('#app');\nroot.innerHTML = '<main><h1>${name}</h1><p>Start building your idea here.</p></main>';\n`,
+        'index.html': `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${title}</title>\n  <link rel="stylesheet" href="src/styles.css" />\n</head>\n<body>\n  <div id="app"></div>\n  <script src="src/main.js"></script>\n</body>\n</html>\n`,
+        'src/main.js': `const root = document.querySelector('#app');\nconst heading = document.createElement('h1');\nheading.textContent = ${nameLiteral};\nconst main = document.createElement('main');\nmain.append(heading, Object.assign(document.createElement('p'), { textContent: 'Start building your idea here.' }));\nroot.append(main);\n`,
         'src/styles.css': `:root { font-family: system-ui, sans-serif; color: #f1f5f9; background: #0c101b; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; }\nmain { padding: 48px; border-radius: 24px; background: #151c2e; border: 1px solid #283553; }\n`,
         'README.md': `# ${name}\n\nCreated with LumenCo.\n`
       }
@@ -181,8 +183,8 @@
       ...state,
       projects: state.projects.map((project) => ({ ...project, score: Math.round(scoreProject(project)) })),
       creatorRank: creatorRank(state.projects.length),
-      developerRank: developerRank(score + (state.xp ? Math.round(state.xp * 0.1) : 0)),
-      codeScore: Math.round(score + (state.xp ? Math.round(state.xp * 0.1) : 0))
+      developerRank: developerRank(score),
+      codeScore: Math.round(score)
     };
   }
 
@@ -220,6 +222,8 @@
     { id: 'avatar-cat', name: 'Kiber Mushuk', category: 'Avatarlar', iconName: 'user', description: 'Piksel kiber mushuk avatari.', kind: 'avatar', price: 200, days: null },
     { id: 'avatar-ninja', name: 'Kiber Ninja', category: 'Avatarlar', iconName: 'user', description: 'Tungi kod ninja avatari.', kind: 'avatar', price: 250, days: null },
     { id: 'avatar-robot', name: 'AI Robot', category: 'Avatarlar', iconName: 'user', description: 'Futuristik sun‘iy intellekt avatari.', kind: 'avatar', price: 300, days: null },
+    { id: 'tag-clean-code', name: 'Clean coder', category: 'Name tags', iconName: 'code', description: 'A label for people who care about clear code.', kind: 'tag', price: 420, days: null },
+    { id: 'tag-night-owl', name: 'Night owl', category: 'Name tags', iconName: 'flame', description: 'A label for late-night builders.', kind: 'tag', price: 500, days: null },
     { id: 'pet-wizard', name: 'Sehrgar Qalpog‘i', category: 'Pet', iconName: 'sparkle', description: 'Lumi ustozi uchun sehrgar qalpoq.', kind: 'pet', price: 150, days: null },
     { id: 'pet-vr', name: 'VR Ko‘zoynak', category: 'Pet', iconName: 'eye', description: 'Lumi uchun kiber VR garnitura.', kind: 'pet', price: 150, days: null },
     { id: 'pet-crown', name: 'Oltin Toj', category: 'Pet', iconName: 'crown', description: 'Lumi uchun imperator toji.', kind: 'pet', price: 300, days: null }
@@ -229,7 +233,7 @@
   function generateCurriculum() {
     const list = [];
     const tracks = [
-      { name: 'Web Asoslari', tier: 'free', count: 20, start: 1, baseReward: 40 },
+      { name: 'Web Asoslari', tier: 'free', count: 20, start: 1, baseReward: 50 },
       { name: 'CSS & Dizayn Laboratoriyasi', tier: 'pro', count: 30, start: 21, baseReward: 60 },
       { name: 'JavaScript & DOM Interaktivlik', tier: 'pro', count: 30, start: 51, baseReward: 80 },
       { name: 'SOLID & Dastur Arxitekturasi', tier: 'pro', count: 20, start: 81, baseReward: 100 },
@@ -319,7 +323,7 @@
           duration: `${15 + (i % 4) * 5} min`,
           level,
           xp: track.baseReward + (i * 2),
-          coins: Math.round(track.baseReward * 0.5)
+          coins: track.baseReward
         });
       }
     });
@@ -329,161 +333,32 @@
 
   const ALL_LESSONS = generateCurriculum();
 
-  function getProfileExtras(userId, userEmail, userName) {
-    const key = `lumenco_extras_${userId}`;
-    let extras = null;
-    try { extras = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
-    const emailLower = String(userEmail || '').toLowerCase();
-    const nameLower = String(userName || '').toLowerCase();
-    const isAdmin = emailLower === 'muhammadbekrafiqov260@gmail.com' || 
-                    nameLower.includes('kembodev') || 
-                    extras?.role === 'admin' ||
-                    localStorage.getItem('lumenco_force_admin') === 'true';
-
-    if (!extras) {
-      extras = {
-        plan: isAdmin ? 'max' : 'free',
-        role: isAdmin ? 'admin' : 'user',
-        isBanned: false,
-        streak: 1,
-        equippedFrame: isAdmin ? 'frame-noyob' : null,
-        equippedBg: isAdmin ? 'bg-laboratoriya' : null,
-        equippedTheme: 'theme-dracula',
-        equippedAvatar: null,
-        equippedTag: null,
-        extraCoins: isAdmin ? 9480 : 250,
-        extraXp: isAdmin ? 9480 : 100,
-        inventory: isAdmin
-          ? ['frame-noyob', 'frame-olov', 'frame-yalpiz', 'bg-laboratoriya', 'bg-shom', 'theme-dracula', 'theme-monokai', 'avatar-robot', 'pet-crown', 'pet-vr']
-          : ['theme-dracula', 'frame-yalpiz'],
-        petConfig: {
-          name: 'Lumi',
-          hat: isAdmin ? 'crown' : 'none',
-          glasses: isAdmin ? 'vr' : 'none',
-          color: 'cyan',
-          level: isAdmin ? 'high' : 'medium'
-        },
-        typingRecord: { bestWpm: isAdmin ? 78 : 0, accuracy: 100, races: 0 }
-      };
-      saveProfileExtras(userId, extras);
-    } else if (isAdmin && (extras.role !== 'admin' || extras.plan !== 'max')) {
-      extras.role = 'admin';
-      extras.plan = 'max';
-      if (!extras.equippedFrame) extras.equippedFrame = 'frame-noyob';
-      if (!extras.equippedBg) extras.equippedBg = 'bg-laboratoriya';
-      saveProfileExtras(userId, extras);
-    }
-    return extras;
+  // Cosmetic game records stay on this device. Roles, plans, balances, bans,
+  // purchased items, and pet settings are always read from or written to Postgres.
+  function getLocalGameRecord(userId) {
+    const key = `lumenco_game_${userId}`;
+    try {
+      const value = JSON.parse(localStorage.getItem(key) || 'null');
+      if (value && typeof value === 'object') return value;
+    } catch {}
+    return { bestWpm: 0, accuracy: 100, races: 0 };
   }
 
-  function saveProfileExtras(userId, extras) {
-    try { localStorage.setItem(`lumenco_extras_${userId}`, JSON.stringify(extras)); } catch {}
+  function saveLocalGameRecord(userId, record) {
+    try { localStorage.setItem(`lumenco_game_${userId}`, JSON.stringify(record)); } catch {}
   }
 
-  function getAdminUsers() {
-    const key = 'lumenco_admin_users_v3';
-    let users = null;
-    try { users = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
-    if (!users || !users.length) {
-      users = [
-        {
-          id: 'usr-admin-1',
-          name: 'Muhammadbek Rafiqov',
-          username: 'kembodev',
-          email: 'muhammadbekrafiqov260@gmail.com',
-          role: 'admin',
-          plan: 'max',
-          coins: 9480,
-          xp: 9480,
-          streak: 12,
-          frame: 'frame-noyob',
-          bg: 'bg-laboratoriya',
-          isBanned: false,
-          createdAt: '2026-01-10T10:00:00Z'
-        },
-        {
-          id: 'usr-user-2',
-          name: 'Jasurbek Developer',
-          username: 'jasur_js',
-          email: 'jasur.dev@gmail.com',
-          role: 'user',
-          plan: 'pro',
-          coins: 3200,
-          xp: 8120,
-          streak: 7,
-          frame: 'frame-olov',
-          bg: 'bg-shom',
-          isBanned: false,
-          createdAt: '2026-02-14T12:30:00Z'
-        },
-        {
-          id: 'usr-user-3',
-          name: 'Malika Frontend',
-          username: 'malika_code',
-          email: 'malika.frontend@gmail.com',
-          role: 'user',
-          plan: 'pro',
-          coins: 2800,
-          xp: 7450,
-          streak: 5,
-          frame: 'frame-shafaq',
-          bg: 'bg-konfet',
-          isBanned: false,
-          createdAt: '2026-02-20T16:00:00Z'
-        },
-        {
-          id: 'usr-user-4',
-          name: 'Bekzod Backend',
-          username: 'bekzod_node',
-          email: 'bekzod.backend@gmail.com',
-          role: 'user',
-          plan: 'free',
-          coins: 1450,
-          xp: 4320,
-          streak: 3,
-          frame: 'frame-okean',
-          bg: 'bg-okean',
-          isBanned: false,
-          createdAt: '2026-03-01T09:15:00Z'
-        },
-        {
-          id: 'usr-user-5',
-          name: 'Aziza AI Engineer',
-          username: 'aziza_ai',
-          email: 'aziza.ai@gmail.com',
-          role: 'user',
-          plan: 'max',
-          coins: 5900,
-          xp: 6890,
-          streak: 9,
-          frame: 'frame-kiber',
-          bg: 'bg-nuqtalar',
-          isBanned: false,
-          createdAt: '2026-03-05T14:40:00Z'
-        },
-        {
-          id: 'usr-user-6',
-          name: 'Rustam Spammer',
-          username: 'spammer_99',
-          email: 'spammer99@botnet.org',
-          role: 'user',
-          plan: 'free',
-          coins: 0,
-          xp: 15,
-          streak: 0,
-          frame: null,
-          bg: null,
-          isBanned: true,
-          createdAt: '2026-03-08T22:10:00Z'
-        }
-      ];
-      saveAdminUsers(users);
-    }
-    return users;
-  }
-
-  function saveAdminUsers(users) {
-    try { localStorage.setItem('lumenco_admin_users_v3', JSON.stringify(users)); } catch {}
+  function recordTypingPractice(userId, body) {
+    const previous = getLocalGameRecord(userId);
+    const wpm = Math.min(300, Math.max(0, Number(body.wpm) || 0));
+    const accuracy = Math.min(100, Math.max(0, Number(body.accuracy) || 0));
+    const record = {
+      bestWpm: Math.max(previous.bestWpm || 0, wpm),
+      accuracy: Math.round(((previous.accuracy || 100) + accuracy) / 2),
+      races: (previous.races || 0) + 1
+    };
+    saveLocalGameRecord(userId, record);
+    return record;
   }
 
   async function restGet(path) { return supabaseFetch(path); }
@@ -493,83 +368,18 @@
     const user = await authFetch('/user', {}, activeSession.access_token);
     const userId = user.id;
     const [profiles, projects, lessons, completions, shopItems, inventory, ledger] = await Promise.all([
-      restGet(`/profiles${query({ id: `eq.${userId}`, select: 'id,username,display_name,bio,avatar_item,tag_item,frame_item,premium_item,premium_until,xp,coins' })}`).catch(() => []),
+      restGet(`/profiles${query({ id: `eq.${userId}`, select: 'id,username,display_name,bio,avatar_item,tag_item,frame_item,background_item,editor_theme,pet_name,pet_color,pet_hat,pet_glasses,role,plan,plan_expires_at,is_banned,xp,coins,created_at' })}`),
       restGet(`/projects${query({ owner_id: `eq.${userId}`, select: 'id,owner_id,name,template,created_at,updated_at', order: 'updated_at.desc' })}`).catch(() => []),
-      restGet(`/lessons${query({ published: 'eq.true', select: 'id,title,track,duration_minutes,level,xp_reward,coin_reward', order: 'id.asc' })}`).catch(() => []),
+      restGet(`/lessons${query({ published: 'eq.true', select: 'id,title,track,duration_minutes,level,xp_reward,coin_reward,lesson_number,plan_tier', order: 'lesson_number.asc' })}`).catch(() => []),
       restGet(`/lesson_completions${query({ profile_id: `eq.${userId}`, select: 'lesson_id' })}`).catch(() => []),
       restGet(`/shop_items${query({ active: 'eq.true', select: 'id,name,category,emoji,description,kind,coin_price,duration_days', order: 'coin_price.asc' })}`).catch(() => []),
       restGet(`/inventory${query({ profile_id: `eq.${userId}`, select: 'item_id' })}`).catch(() => []),
       restGet(`/coin_ledger${query({ profile_id: `eq.${userId}`, select: 'id,delta,reason,created_at', order: 'created_at.desc', limit: '20' })}`).catch(() => [])
     ]);
 
-    let profile = profiles?.[0];
-    if (!profile) {
-      try {
-        const baseName = (user.user_metadata?.display_name || user.email?.split('@')[0] || 'Muhammadbek Rafiqov').trim();
-        const baseUsername = (baseName.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 18) || 'kembodev');
-        await supabaseFetch('/profiles', {
-          method: 'POST',
-          body: {
-            id: userId,
-            display_name: baseName.slice(0, 40),
-            username: baseUsername,
-            bio: 'LumenCo platformasida ijodkor va dasturchi.'
-          },
-          prefer: 'resolution=ignore-duplicates,return=minimal'
-        }).catch(() => {});
-        const recheck = await restGet(`/profiles${query({ id: `eq.${userId}`, select: 'id,username,display_name,bio,avatar_item,tag_item,frame_item,premium_item,premium_until,xp,coins' })}`);
-        if (recheck?.length) profile = recheck[0];
-      } catch (err) {
-        console.warn('Profil yaratishda xato:', err);
-      }
-    }
-
-    if (!profile) {
-      profile = {
-        id: userId,
-        display_name: (user.user_metadata?.display_name || (user.email === 'muhammadbekrafiqov260@gmail.com' ? 'Muhammadbek Rafiqov' : user.email?.split('@')[0]) || 'Muhammadbek Rafiqov').slice(0, 40),
-        username: (user.email === 'muhammadbekrafiqov260@gmail.com' ? 'kembodev' : user.email?.split('@')[0] || 'kembodev').slice(0, 24),
-        bio: 'Dasturlash, sun‘iy intellekt va yangi loyihalar ustida ishlamoqdaman.',
-        avatar_item: null,
-        tag_item: null,
-        frame_item: null,
-        premium_item: null,
-        premium_until: null,
-        xp: 0,
-        coins: 1000
-      };
-    }
-
-    // Merge extras (local persistence + atomjs features)
-    const extras = getProfileExtras(userId, user.email, profile.display_name || profile.username);
-
-    // Sync admin users list with current user
-    const adminUsers = getAdminUsers();
-    let currentAdminEntry = adminUsers.find((u) => u.email === user.email || u.id === userId);
-    if (!currentAdminEntry && (extras.role === 'admin' || user.email === 'muhammadbekrafiqov260@gmail.com')) {
-      currentAdminEntry = {
-        id: userId,
-        name: profile.display_name,
-        username: profile.username,
-        email: user.email,
-        role: 'admin',
-        plan: extras.plan || 'max',
-        coins: (profile.coins || 0) + (extras.extraCoins || 0),
-        xp: (profile.xp || 0) + (extras.extraXp || 0),
-        streak: extras.streak || 12,
-        frame: extras.equippedFrame || 'frame-noyob',
-        bg: extras.equippedBg || 'bg-laboratoriya',
-        isBanned: false,
-        createdAt: new Date().toISOString()
-      };
-      adminUsers.unshift(currentAdminEntry);
-      saveAdminUsers(adminUsers);
-    } else if (currentAdminEntry) {
-      // Keep ban status and plan in sync
-      if (currentAdminEntry.isBanned !== extras.isBanned) extras.isBanned = currentAdminEntry.isBanned;
-      if (currentAdminEntry.plan !== extras.plan) extras.plan = currentAdminEntry.plan;
-      saveProfileExtras(userId, extras);
-    }
+    const profile = profiles?.[0];
+    if (!profile) throw new Error('Hisob profili topilmadi. Supabase profil triggeri va migration holatini tekshiring.');
+    const gameRecord = getLocalGameRecord(userId);
 
     const projectFiles = await Promise.all((projects || []).map((project) => restGet(`/project_files${query({ project_id: `eq.${project.id}`, select: 'path,kind,content', order: 'path.asc' })}`).catch(() => [])));
     const mappedProjects = (projects || []).map((project, index) => {
@@ -584,13 +394,17 @@
     });
 
     // Merge lessons and shop items
-    const mergedInventory = Array.from(new Set([
-      ...(inventory || []).map((entry) => entry.item_id),
-      ...(extras.inventory || [])
-    ]));
-
-    const totalCoins = Math.max(0, (profile.coins || 0) + (extras.extraCoins || 0));
-    const totalXp = Math.max(0, (profile.xp || 0) + (extras.extraXp || 0));
+    const ownedItems = (inventory || []).map((entry) => entry.item_id);
+    const planExpired = profile.plan !== 'free' && profile.plan_expires_at && Date.parse(profile.plan_expires_at) <= Date.now();
+    const activePlan = profile.role === 'admin' ? 'max' : (planExpired ? 'free' : (profile.plan || 'free'));
+    const leaderboard = await supabaseFetch('/rpc/leaderboard', { method: 'POST', body: {} }).catch(() => []);
+    const adminUsers = profile.role === 'admin'
+      ? (await supabaseFetch('/rpc/admin_list_users', { method: 'POST', body: {} })).map((u) => ({
+        id: u.id, name: u.name, username: u.username, email: u.email,
+        role: u.role, plan: u.plan, coins: u.coins, xp: u.xp,
+        isBanned: u.is_banned, createdAt: u.created_at
+      }))
+      : [];
 
     return stateWithRanks({
       profile: {
@@ -599,29 +413,40 @@
         name: profile.display_name,
         username: profile.username,
         bio: profile.bio || '',
-        avatarItem: extras.equippedAvatar || profile.avatar_item,
+        avatarItem: profile.avatar_item,
         tagItem: profile.tag_item,
-        frameItem: extras.equippedFrame || profile.frame_item,
-        bgItem: extras.equippedBg || null,
-        themeItem: extras.equippedTheme || 'theme-dracula',
-        role: extras.role || 'user',
-        plan: extras.plan || 'free',
-        isBanned: !!extras.isBanned,
-        streak: extras.streak || 1,
-        petConfig: extras.petConfig || { name: 'Lumi', hat: 'none', glasses: 'none', color: 'cyan', level: 'medium' },
-        typingRecord: extras.typingRecord || { bestWpm: 0, accuracy: 100, races: 0 }
+        frameItem: profile.frame_item,
+        bgItem: profile.background_item,
+        themeItem: profile.editor_theme,
+        role: profile.role || 'user',
+        plan: activePlan,
+        planExpiresAt: profile.plan_expires_at,
+        isBanned: !!profile.is_banned,
+        petConfig: { name: profile.pet_name || 'Lumi', color: profile.pet_color || 'cyan', hat: profile.pet_hat || 'none', glasses: profile.pet_glasses || 'none' },
+        typingRecord: gameRecord
       },
-      coins: totalCoins,
-      xp: totalXp,
-      streak: extras.streak || 1,
+      coins: profile.coins || 0,
+      xp: profile.xp || 0,
+      streak: 0,
       projects: mappedProjects,
       completedLessons: (completions || []).map((entry) => entry.lesson_id),
-      inventory: mergedInventory,
-      subscription: extras.plan !== 'free' ? { itemId: `plan-${extras.plan}`, name: `Lumen ${extras.plan.toUpperCase()}`, expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() } : null,
+      inventory: ownedItems,
+      subscription: activePlan !== 'free' ? { itemId: `plan-${activePlan}`, name: `Lumen ${activePlan.toUpperCase()}`, expiresAt: profile.plan_expires_at } : null,
       coinLedger: (ledger || []).map((entry) => ({ id: entry.id, delta: entry.delta, reason: entry.reason, createdAt: entry.created_at })),
-      lessons: ALL_LESSONS,
+      lessons: (lessons?.length ? lessons.map((lesson) => ({
+        id: lesson.id,
+        index: lesson.lesson_number,
+        title: lesson.title,
+        track: lesson.track,
+        tier: lesson.plan_tier,
+        duration: `${lesson.duration_minutes} min`,
+        level: lesson.level,
+        xp: lesson.xp_reward,
+        coins: lesson.coin_reward
+      })) : ALL_LESSONS),
       shopItems: FULL_SHOP_ITEMS,
-      adminUsers: extras.role === 'admin' ? getAdminUsers() : []
+      leaderboard: Array.isArray(leaderboard) ? leaderboard : [],
+      adminUsers: Array.isArray(adminUsers) ? adminUsers : []
     });
   }
 
@@ -725,6 +550,22 @@
     const method = (options.method || 'GET').toUpperCase();
     const body = options.body ? JSON.parse(options.body) : {};
 
+    if (config?.mode === 'local') {
+      const response = await fetch(`${pathname}${parsed.search}`, {
+        method,
+        headers: { 'content-type': 'application/json', ...(options.headers || {}) },
+        body: options.body
+      });
+      const payload = await readResponse(response);
+      if (pathname === '/api/game/record' && method === 'POST') {
+        return { ...payload, typingRecord: recordTypingPractice('local-builder', body) };
+      }
+      if (pathname === '/api/state' && method === 'GET') {
+        return { ...payload, typingRecord: getLocalGameRecord('local-builder') };
+      }
+      return payload;
+    }
+
     if (pathname === '/api/state' && method === 'GET') return loadState();
     if (pathname === '/api/projects' && method === 'POST') return createProject(body);
 
@@ -739,171 +580,71 @@
       const user = await authFetch('/user', {}, activeSession.access_token);
       await supabaseFetch(`/profiles${query({ id: `eq.${user.id}` })}`, {
         method: 'PATCH', body: { display_name: name, username, bio }, prefer: 'return=representation'
-      }).catch(() => {});
+      });
       return loadState();
     }
 
     if (pathname === '/api/profile/equip' && method === 'PATCH') {
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
-      const item = FULL_SHOP_ITEMS.find((it) => it.id === body.itemId);
-      if (item) {
-        if (item.kind === 'frame') extras.equippedFrame = extras.equippedFrame === item.id ? null : item.id;
-        else if (item.kind === 'bg') extras.equippedBg = extras.equippedBg === item.id ? null : item.id;
-        else if (item.kind === 'theme') extras.equippedTheme = item.id;
-        else if (item.kind === 'avatar') extras.equippedAvatar = extras.equippedAvatar === item.id ? null : item.id;
-        saveProfileExtras(user.id, extras);
-      }
-      await supabaseFetch('/rpc/equip_shop_item', { method: 'POST', body: { p_item_id: body.itemId } }).catch(() => {});
+      await supabaseFetch('/rpc/equip_shop_item', { method: 'POST', body: { p_item_id: body.itemId } });
       return loadState();
     }
 
     if (pathname === '/api/shop/purchase' && method === 'POST') {
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
-      const item = FULL_SHOP_ITEMS.find((it) => it.id === body.itemId);
-      if (!item) throw new Error('Mahsulot topilmadi.');
-      const currentState = await loadState();
-      if (currentState.coins < item.price) throw new Error('Coinlar yetarli emas. Darslar yoki tez yozish orqali to‘plang.');
-      if (!extras.inventory.includes(item.id)) {
-        extras.inventory.push(item.id);
-        extras.extraCoins = (extras.extraCoins || 0) - item.price;
-        // Auto equip
-        if (item.kind === 'frame') extras.equippedFrame = item.id;
-        if (item.kind === 'bg') extras.equippedBg = item.id;
-        if (item.kind === 'theme') extras.equippedTheme = item.id;
-        saveProfileExtras(user.id, extras);
-      }
-      await supabaseFetch('/rpc/purchase_shop_item', { method: 'POST', body: { p_item_id: body.itemId } }).catch(() => {});
+      await supabaseFetch('/rpc/purchase_shop_item', { method: 'POST', body: { p_item_id: body.itemId } });
       return loadState();
     }
 
     if (pathname === '/api/plans/select' && method === 'POST') {
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
       const plan = ['free', 'pro', 'max'].includes(body.plan) ? body.plan : 'free';
-      extras.plan = plan;
-      saveProfileExtras(user.id, extras);
-
-      // Update in admin list if exists
-      const users = getAdminUsers();
-      const target = users.find((u) => u.email === user.email || u.id === user.id);
-      if (target) {
-        target.plan = plan;
-        saveAdminUsers(users);
-      }
+      if (plan === 'free') throw new Error('Free rejasi bepul va doim ochiq. Pullik rejani bekor qilish profil sozlamalarida mavjud bo‘ladi.');
+      await supabaseFetch('/rpc/subscribe_plan', { method: 'POST', body: { p_plan: plan } });
       return loadState();
     }
 
     if (pathname === '/api/pet/customize' && method === 'POST') {
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
-      extras.petConfig = {
-        name: String(body.name || extras.petConfig?.name || 'Lumi').slice(0, 20),
-        hat: body.hat || extras.petConfig?.hat || 'none',
-        glasses: body.glasses || extras.petConfig?.glasses || 'none',
-        color: body.color || extras.petConfig?.color || 'cyan',
-        level: body.level || extras.petConfig?.level || 'medium'
-      };
-      saveProfileExtras(user.id, extras);
+      const name = typeof body.name === 'string' ? body.name.trim().slice(0, 20) : 'Lumi';
+      const color = ['cyan', 'lime', 'gold', 'purple'].includes(body.color) ? body.color : 'cyan';
+      await supabaseFetch('/rpc/save_pet_config', { method: 'POST', body: { p_name: name, p_color: color } });
       return loadState();
     }
 
     if (pathname === '/api/game/record' && method === 'POST') {
       const activeSession = await currentSession();
       const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
-      const wpm = Number(body.wpm) || 0;
-      const accuracy = Number(body.accuracy) || 100;
-      const multiplier = extras.plan === 'max' ? 3 : extras.plan === 'pro' ? 2 : 1;
-      const earnedCoins = 30 * multiplier;
-      const earnedXp = 50 * multiplier;
-      extras.extraCoins = (extras.extraCoins || 0) + earnedCoins;
-      extras.extraXp = (extras.extraXp || 0) + earnedXp;
-      extras.typingRecord = {
-        bestWpm: Math.max(extras.typingRecord?.bestWpm || 0, wpm),
-        accuracy: Math.round(((extras.typingRecord?.accuracy || 100) + accuracy) / 2),
-        races: (extras.typingRecord?.races || 0) + 1
-      };
-      saveProfileExtras(user.id, extras);
+      recordTypingPractice(user.id, body);
       return loadState();
     }
 
     // Admin endpoints
     if (pathname === '/api/admin/users' && method === 'GET') {
-      return getAdminUsers();
+      return supabaseFetch('/rpc/admin_list_users', { method: 'POST', body: {} });
     }
 
     if (pathname === '/api/admin/ban' && method === 'POST') {
-      const users = getAdminUsers();
-      const target = users.find((u) => u.id === body.userId || u.email === body.email || u.username === body.username);
-      if (target) {
-        target.isBanned = !target.isBanned;
-        saveAdminUsers(users);
-      }
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      if (user && (user.id === body.userId || user.email === body.email)) {
-        const extras = getProfileExtras(user.id, user.email);
-        extras.isBanned = target ? target.isBanned : !extras.isBanned;
-        saveProfileExtras(user.id, extras);
-      }
+      await supabaseFetch('/rpc/admin_set_ban', { method: 'POST', body: {
+        p_user_id: body.userId,
+        p_is_banned: body.isBanned === true
+      } });
       return loadState();
     }
 
     if (pathname === '/api/admin/plan' && method === 'POST') {
-      const users = getAdminUsers();
-      const target = users.find((u) => u.id === body.userId || u.email === body.email || u.username === body.username);
-      if (target) {
-        target.plan = body.plan;
-        saveAdminUsers(users);
-      }
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      if (user && (user.id === body.userId || user.email === body.email)) {
-        const extras = getProfileExtras(user.id, user.email);
-        extras.plan = body.plan;
-        saveProfileExtras(user.id, extras);
-      }
+      const plan = ['free', 'pro', 'max'].includes(body.plan) ? body.plan : null;
+      if (!plan) throw new Error('Noto‘g‘ri tarif.');
+      await supabaseFetch('/rpc/admin_set_plan', { method: 'POST', body: { p_user_id: body.userId, p_plan: plan } });
       return loadState();
     }
 
     if (pathname === '/api/admin/coins' && method === 'POST') {
-      const users = getAdminUsers();
-      const target = users.find((u) => u.id === body.userId || u.email === body.email || u.username === body.username);
-      const amount = Number(body.amount) || 500;
-      if (target) {
-        target.coins = (target.coins || 0) + amount;
-        saveAdminUsers(users);
-      }
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      if (user && (user.id === body.userId || user.email === body.email)) {
-        const extras = getProfileExtras(user.id, user.email);
-        extras.extraCoins = (extras.extraCoins || 0) + amount;
-        saveProfileExtras(user.id, extras);
-      }
+      const amount = Math.trunc(Number(body.amount));
+      if (!Number.isInteger(amount) || amount < 1 || amount > 5000) throw new Error('Coin miqdori 1–5000 oralig‘ida bo‘lsin.');
+      await supabaseFetch('/rpc/admin_adjust_coins', { method: 'POST', body: { p_user_id: body.userId, p_amount: amount } });
       return loadState();
     }
 
     const lessonMatch = pathname.match(/^\/api\/lessons\/([\w-]+)\/complete$/);
     if (lessonMatch && method === 'POST') {
-      const activeSession = await currentSession();
-      const user = await authFetch('/user', {}, activeSession.access_token);
-      const extras = getProfileExtras(user.id, user.email);
-      const lesson = ALL_LESSONS.find((l) => l.id === lessonMatch[1]);
-      if (lesson) {
-        const mult = extras.plan === 'max' ? 3 : extras.plan === 'pro' ? 2 : 1;
-        extras.extraCoins = (extras.extraCoins || 0) + (lesson.coins * mult);
-        extras.extraXp = (extras.extraXp || 0) + (lesson.xp * mult);
-        extras.streak = (extras.streak || 1) + 1;
-        saveProfileExtras(user.id, extras);
-      }
-      await supabaseFetch('/rpc/complete_lesson', { method: 'POST', body: { p_lesson_id: lessonMatch[1] } }).catch(() => {});
+      await supabaseFetch('/rpc/complete_lesson', { method: 'POST', body: { p_lesson_id: lessonMatch[1] } });
       return loadState();
     }
 
@@ -969,35 +710,22 @@
     return authFetch('/user', {}, session.access_token);
   }
 
-  async function signUp(email, password, name) {
+  async function signUp(email, password) {
     const redirect = encodeURIComponent(location.origin);
     const payload = await authFetch(`/signup?redirect_to=${redirect}`, {
       method: 'POST',
-      body: { email, password, data: { display_name: name } }
+      body: { email, password }
     });
     if (payload.access_token) saveSession(normalizeSession(payload));
     if (payload.user?.id && payload.access_token) {
-      return { user: await authFetch('/user', {}, session.access_token), needsEmail: false };
+      return authFetch('/user', {}, session.access_token);
     }
-    return { user: payload.user || null, needsEmail: true };
+    throw new Error('Email tasdiqlash hali Supabase’da yoqilgan. Supabase Auth > Providers > Email bo‘limida email confirmationni o‘chiring, shunda ro‘yxatdan o‘tish bilan darhol kirish mumkin bo‘ladi.');
   }
 
   async function signOut() {
     if (session?.access_token) await authFetch('/logout', { method: 'POST', body: {} }, session.access_token).catch(() => {});
     saveSession(null);
-  }
-
-  async function resendConfirmation(email) {
-    const redirect = encodeURIComponent(location.origin);
-    const response = await fetch(`${config.url}/auth/v1/resend`, {
-      method: 'POST',
-      headers: {
-        apikey: config.key,
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({ type: 'signup', email, options: { email_redirect_to: location.origin } })
-    });
-    return readResponse(response);
   }
 
   window.LumenBackend = {
@@ -1007,7 +735,6 @@
     signIn,
     signUp,
     signOut,
-    resendConfirmation,
     clearSession: () => saveSession(null)
   };
 })();
